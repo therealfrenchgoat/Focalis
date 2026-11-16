@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f9fd">
+<title>Focalis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&amp;family=Playwrite+FR+Moderne:wght@100..400&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Plan : une page de cahier Seyes (interlignes violets, marge rouge, encre bleue de stylo plume).
+     Tout s'aligne a gauche le long de la marge. Le seul aplat vif est le jaune des gommettes. */
+  --papier: #f8f9fd;
+  --encre: #1c2a78;
+  --encre-douce: #55609e;
+  --seyes: rgba(96, 130, 226, .2);
+  --seyes-fort: rgba(126, 108, 214, .34);
+  --marge: #e2475c;
+  --gommette: #ffc62e;
+  --vert: #178f5f;
+  --ciel: #4aa8ec;
+  --bureau: #d6dcf2;
+  --serie-1: #2a4bd0;
+  --serie-2: #e8662a;
+  --f-main: "Playwrite FR Moderne", "Segoe Script", "Bradley Hand", "Snell Roundhand", cursive;
+  --f-texte: "Lexend", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bureau); color: var(--encre);
+  font: 400 16px/24px var(--f-texte);
+  -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none; touch-action: manipulation;
+}
+button { font: inherit; color: inherit; margin: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--serie-1); outline-offset: 3px; }
+p, h1, h2, ol, ul, dl, dd, figure { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+
+.app {
+  position: relative; height: 100%; max-width: 460px; margin: 0 auto;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--papier);
+  box-shadow: 0 0 0 1px rgba(28, 42, 120, .14), 0 18px 50px rgba(28, 42, 120, .2);
+}
+.cahier { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- la feuille de cahier ---------- */
+.feuille {
+  min-height: 100%;
+  padding: calc(16px + env(safe-area-inset-top)) 16px 40px 52px;
+  display: flex; flex-direction: column; gap: 24px;
+  background-color: var(--papier);
+  background-image:
+    linear-gradient(90deg, transparent 39px, var(--marge) 39px, var(--marge) 40.5px, transparent 40.5px),
+    linear-gradient(var(--seyes-fort) 1px, transparent 1px),
+    linear-gradient(90deg, var(--seyes-fort) 1px, transparent 1px),
+    linear-gradient(var(--seyes) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 32px, 32px 100%, 100% 8px;
+  background-position: 0 0, 0 7px, 7px 0, 0 7px;
+}
+.date-jour { align-self: flex-end; font: 400 14px/24px var(--f-main); color: var(--encre-douce); }
+.entete { display: grid; gap: 8px; }
+.titre {
+  font: 400 32px/64px var(--f-main); color: var(--encre); text-wrap: balance;
+  text-decoration: underline; text-decoration-color: var(--marge); text-decoration-thickness: 2px; text-underline-offset: 10px;
+}
+h2 {
+  font: 600 18px/24px var(--f-texte); text-wrap: balance;
+  text-decoration: underline; text-decoration-color: var(--marge); text-decoration-thickness: 1.5px; text-underline-offset: 5px;
+}
+.texte { max-width: 34em; }
+.petit { font-size: 14px; line-height: 20px; color: var(--encre-douce); max-width: 36em; }
+.mention { padding-top: 8px; }
+.bloc { display: grid; gap: 8px; }
+.note-rouge { font: 400 15px/32px var(--f-main); color: var(--marge); }
+
+/* ---------- boutons ---------- */
+.bouton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; padding: 0 28px;
+  border: 2px solid var(--encre); border-radius: 18px;
+  background: var(--gommette); color: var(--encre);
+  font: 600 18px/24px var(--f-texte);
+  box-shadow: 0 5px 0 var(--encre);
+  cursor: pointer; transition: transform .06s, box-shadow .06s;
+}
+.bouton:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--encre); }
+.bouton.calme { min-height: 48px; padding: 0 20px; background: var(--papier); font-weight: 500; font-size: 16px; box-shadow: 0 4px 0 rgba(28, 42, 120, .28); }
+.bouton.calme:active { box-shadow: 0 1px 0 rgba(28, 42, 120, .28); }
+.lien { align-self: flex-start; justify-self: start; padding: 8px 0; border: 0; background: none; font-size: 15px; text-decoration: underline; cursor: pointer; }
+.choix {
+  min-height: 40px; padding: 6px 14px;
+  border: 1.5px solid var(--encre); border-radius: 999px;
+  background: var(--papier); font-size: 14.5px; line-height: 20px; cursor: pointer;
+}
+.choix[aria-pressed="true"] { background: var(--encre); color: #fff; }
+.reglages, .bascule, .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions { gap: 12px 10px; align-items: center; padding-top: 4px; }
+
+/* ---------- accueil ---------- */
+.apercu { display: grid; gap: 8px; }
+.fenetre {
+  position: relative; display: block; width: 100%; min-height: 180px; padding: 0; aspect-ratio: 16 / 10;
+  border: 2px solid var(--encre); border-radius: 20px; overflow: hidden;
+  background: var(--ciel); box-shadow: 0 6px 0 rgba(28, 42, 120, .16); cursor: pointer;
+}
+.fenetre canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.apercu figcaption { font-size: 14px; line-height: 16px; color: var(--encre-douce); }
+.depart { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.semaine { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 40px; }
+.gommettes { display: inline-flex; gap: 4px; align-items: center; }
+.gom { flex: none; display: block; filter: drop-shadow(0 1.5px 1.5px rgba(20, 30, 95, .35)); }
+.gom.vide { filter: none; color: var(--encre); }
+.sommaire { display: grid; }
+.sommaire li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  min-height: 32px; padding: 4px 0; border-bottom: 1px solid var(--seyes-fort); color: var(--encre-douce);
+}
+.sommaire em { font-style: normal; font-size: 13px; padding: 0 10px; border: 1px dashed var(--encre-douce); border-radius: 999px; white-space: nowrap; }
+
+/* ---------- lignes de mesures ---------- */
+.lignes { display: grid; }
+.lignes > div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  min-height: 32px; padding: 4px 0; border-bottom: 1px solid var(--seyes-fort);
+}
+.lignes dt { color: var(--encre-douce); font-size: 15px; }
+.lignes dd { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.lignes dd small { display: block; font-weight: 400; font-size: 13px; line-height: 18px; color: var(--encre-douce); }
+
+/* ---------- carnet ---------- */
+.vide { display: grid; gap: 16px; justify-items: start; }
+.vols { display: grid; }
+.vols li {
+  display: grid; grid-template-columns: 40px 1fr auto; column-gap: 12px; align-items: center;
+  margin-left: -52px; min-height: 56px; padding: 6px 0; border-bottom: 1px solid var(--seyes-fort);
+}
+.vols .quand { font: 400 11px/16px var(--f-main); color: var(--marge); text-align: right; white-space: nowrap; }
+.vols .quoi strong { font-weight: 600; }
+.vols .quoi small { display: block; font-size: 13px; line-height: 18px; color: var(--encre-douce); }
+.confirme { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* ---------- graphiques ---------- */
+.graphe { position: relative; padding: 10px 6px 4px; border: 1px solid var(--seyes-fort); border-radius: 14px; background: var(--papier); }
+.graphe svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+.graphe text { font-family: var(--f-texte); font-variant-numeric: tabular-nums; }
+.legende { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 6px 4px; font-size: 13px; line-height: 20px; color: var(--encre-douce); }
+.legende i, .bulle i { display: inline-block; width: 16px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2.5px solid; border-radius: 2px; }
+.bulle {
+  position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none;
+  padding: 6px 10px; border-radius: 10px; background: var(--encre); color: #fff;
+  font-size: 12.5px; line-height: 18px; white-space: nowrap; opacity: 0; transition: opacity .1s;
+}
+.bulle b { font-weight: 600; }
+.bulle-titre { opacity: .8; }
+
+/* ---------- la science ---------- */
+.lecon { display: grid; gap: 8px; }
+.lecon ul { display: grid; gap: 8px; padding-left: 0; }
+.lecon li { padding-left: 18px; position: relative; max-width: 34em; }
+.lecon li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--gommette); border: 1.5px solid var(--encre); }
+.schema { padding: 10px 8px 6px; border: 1px solid var(--seyes-fort); border-radius: 14px; background: var(--papier); }
+.schema svg { display: block; width: 100%; height: auto; }
+.schema text { font-family: var(--f-texte); }
+.sources { display: grid; gap: 8px; font-size: 14px; line-height: 20px; }
+.sources a { color: var(--serie-1); }
+
+/* ---------- onglets : les intercalaires du classeur ---------- */
+.intercalaires {
+  flex: 0 0 auto; display: flex; align-items: flex-start; gap: 6px;
+  padding: 0 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bureau); border-top: 1.5px solid var(--encre);
+}
+.onglet {
+  flex: 1 1 0; min-width: 0; min-height: 46px; padding: 8px 4px 10px; margin-top: -1.5px;
+  border: 1.5px solid var(--encre); border-radius: 0 0 14px 14px;
+  font: 500 14px/18px var(--f-texte); cursor: pointer;
+}
+.o-jouer { background: #ffe7a0; }
+.o-carnet { background: #cfe0ff; }
+.o-science { background: #ffd2da; }
+.onglet[aria-selected="true"] { min-height: 56px; background: var(--papier); border-top-color: var(--papier); font-weight: 600; box-shadow: 0 4px 0 rgba(28, 42, 120, .16); }
+
+/* ---------- ecrans plein cadre ---------- */
+.ecran { position: absolute; inset: 0; z-index: 5; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--papier); }
+.regles { display: grid; gap: 16px; }
+.regles li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; }
+.regles strong { font-weight: 600; font-size: 17px; }
+.regles p { color: var(--encre-douce); font-size: 15px; line-height: 22px; }
+.picto { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 48px; }
+
+/* ---------- le vol ---------- */
+.vol {
+  position: absolute; inset: 0; z-index: 10; overflow: hidden; background: var(--ciel);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.vol canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; left: 0; right: 0; top: 0; display: grid; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 12px 0; pointer-events: none; }
+.hud-haut { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.compteur {
+  display: flex; align-items: center; gap: 4px; min-width: 76px; padding: 3px 12px 3px 5px;
+  border: 2px solid var(--encre); border-radius: 999px; background: rgba(248, 249, 253, .95);
+  font: 600 17px/26px var(--f-texte); font-variant-numeric: tabular-nums;
+}
+.frise { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.frise li {
+  position: relative; height: 28px; overflow: hidden;
+  border: 1.5px solid rgba(28, 42, 120, .6); border-radius: 9px; background: rgba(248, 249, 253, .6);
+  font: 500 12px/25px var(--f-texte); text-align: center; color: var(--encre); white-space: nowrap;
+}
+.frise li i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--gommette); }
+.frise li span { position: relative; }
+.frise li.encours { background: rgba(248, 249, 253, .96); border-color: var(--encre); font-weight: 600; }
+.frise li.fait i { width: 100% !important; }
+.rond {
+  pointer-events: auto; width: 40px; height: 40px; padding: 0; border: 2px solid var(--encre); border-radius: 50%;
+  background: rgba(248, 249, 253, .95); font: 500 22px/1 var(--f-texte); cursor: pointer;
+}
+.hud-niveaux { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.puce {
+  display: inline-flex; align-items: baseline; gap: 5px; padding: 1px 10px; border-radius: 999px;
+  background: rgba(28, 42, 120, .8); color: #fff; font: 400 12.5px/22px var(--f-texte); white-space: nowrap;
+}
+.puce b { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 2.1em; text-align: right; }
+.puce em { font-style: normal; display: inline-block; width: 9px; font-size: 9px; }
+.puce.monte { background: var(--vert); }
+.puce.descend { background: #b8364a; }
+.troncons { display: inline-flex; gap: 2px; }
+.troncons .gom.vide { color: #fff; }
+.troncons .gom.vide g { opacity: 1; stroke-width: 2.6; }
+
+.annonce {
+  position: absolute; left: 16px; right: 16px; top: calc(96px + env(safe-area-inset-top)); display: grid; justify-items: center; gap: 8px;
+  padding: 16px; border: 2px solid var(--encre); border-radius: 20px; background: rgba(248, 249, 253, .97);
+  box-shadow: 0 6px 0 rgba(28, 42, 120, .3); text-align: center; pointer-events: none;
+  opacity: 0; transform: translateY(-10px); transition: opacity .18s, transform .18s;
+}
+.annonce.visible { opacity: 1; transform: none; }
+.annonce .chiffre { font: 600 72px/76px var(--f-texte); }
+.annonce .gros { font: 600 21px/28px var(--f-texte); text-wrap: balance; }
+.annonce .detail { font-size: 15px; line-height: 22px; color: var(--encre-douce); max-width: 24em; text-wrap: balance; }
+.exemples { display: flex; align-items: center; gap: 16px; }
+.exemples span { display: grid; justify-items: center; gap: 2px; font-size: 13px; line-height: 18px; font-weight: 600; }
+.exemples .oui { color: var(--vert); }
+.exemples .non { color: var(--marge); }
+.annonce .bouton { pointer-events: auto; }
+
+.conseil {
+  position: absolute; left: 0; right: 0; bottom: calc(146px + env(safe-area-inset-bottom)); padding: 0 16px;
+  text-align: center; font: 600 15px/22px var(--f-texte); color: #fff; pointer-events: none;
+  text-shadow: 0 1px 0 rgba(20, 30, 95, .7), 0 0 12px rgba(20, 30, 95, .6);
+  opacity: 0; transition: opacity .2s;
+}
+.conseil.visible { opacity: 1; }
+
+.commandes {
+  position: absolute; left: 0; right: 0; bottom: 0; height: calc(134px + env(safe-area-inset-bottom));
+  padding: 8px 12px calc(14px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; pointer-events: none;
+}
+.commandes.gaucher { grid-template-columns: 1fr 1.3fr; }
+.commandes.gaucher .manche { order: 2; }
+.manche, .gachette {
+  display: grid; align-content: center; justify-items: center; gap: 8px;
+  border-radius: 22px; font: 500 13.5px/18px var(--f-texte); transition: opacity .2s;
+}
+.manche { border: 2px solid rgba(248, 249, 253, .9); background: rgba(28, 42, 120, .42); color: #fff; }
+.rail { position: relative; width: 84%; height: 12px; margin: 18px 0 20px; border-radius: 999px; background: rgba(248, 249, 253, .4); }
+.curseur {
+  position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  border: 2px solid var(--encre); border-radius: 50%; background: var(--papier);
+  box-shadow: 0 3px 0 rgba(20, 30, 95, .5); will-change: transform;
+}
+.curseur::before, .curseur::after { content: ""; position: absolute; top: 50%; width: 0; height: 0; margin-top: -5px; border: 5px solid transparent; }
+.curseur::before { left: 5px; border-right-color: var(--encre); border-left-width: 0; }
+.curseur::after { right: 5px; border-left-color: var(--encre); border-right-width: 0; }
+.gachette {
+  border: 2px solid var(--encre); background: var(--gommette); color: var(--encre);
+  font-weight: 600; font-size: 16px; box-shadow: 0 5px 0 var(--encre); margin-bottom: 5px;
+  transition: transform .05s, box-shadow .05s, opacity .2s;
+}
+.gachette.appui { transform: translateY(4px); box-shadow: 0 1px 0 var(--encre); }
+.verrou { opacity: .42; }
+
+/* ---------- bilan ---------- */
+.appreciation { font: 400 21px/40px var(--f-main); color: var(--marge); transform: rotate(-2deg); transform-origin: left center; }
+.bilan-tete { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.focus { display: grid; }
+.focus strong { font: 600 64px/64px var(--f-texte); }
+.bilan-etoiles { display: grid; gap: 4px; justify-items: end; }
+
+@keyframes tampon { 0% { transform: scale(.4) rotate(-20deg); opacity: 0; } 70% { transform: scale(1.18) rotate(4deg); opacity: 1; } 100% { transform: none; } }
+.pose { animation: tampon .34s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .pose { animation: none; }
+  .annonce, .conseil, .bouton, .gachette { transition: none; }
+}
+@media (max-width: 350px) {
+  .puce { padding: 1px 7px; font-size: 11.5px; }
+  .troncons .gom { width: 19px; height: 19px; }
+  .frise li { font-size: 11px; }
+}
+
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <main class="cahier" id="cahier">
+
+    <!-- ===== Onglet Jouer ===== -->
+    <section class="feuille" id="page-jouer" role="tabpanel" aria-labelledby="tab-jouer">
+      <p class="date-jour" id="date-jour"></p>
+      <header class="entete">
+        <h1 class="titre">Focalis</h1>
+        <p class="texte">Pilote ton avion en papier et entraîne ton attention.</p>
+      </header>
+      <figure class="apercu">
+        <button class="fenetre" id="btn-fenetre" type="button" aria-label="Décoller pour le vol numéro 1">
+          <canvas id="apercu"></canvas>
+        </button>
+        <figcaption>Vol n° 1, au-dessus des champs de lavande</figcaption>
+      </figure>
+      <div class="depart">
+        <button class="bouton" id="btn-decoller" type="button">Décoller</button>
+        <p class="petit">Un vol dure 1 minute.<br><span id="acc-niveaux"></span></p>
+      </div>
+      <section class="bloc">
+        <h2>Cette semaine</h2>
+        <div class="semaine"><span class="gommettes" id="acc-semaine"></span><span id="acc-semaine-txt"></span></div>
+        <p class="petit" id="acc-focus" hidden></p>
+      </section>
+      <section class="bloc">
+        <h2>Les prochains vols</h2>
+        <ol class="sommaire">
+          <li><span>Vol n° 2, les volcans d'Auvergne</span><em>bientôt</em></li>
+          <li><span>Vol n° 3, la côte bretonne</span><em>bientôt</em></li>
+          <li><span>Vol n° 4, les sommets des Alpes</span><em>bientôt</em></li>
+        </ol>
+      </section>
+      <section class="bloc">
+        <h2>Réglages</h2>
+        <div class="reglages">
+          <button class="choix" id="btn-son" type="button" aria-pressed="true">Son activé</button>
+          <button class="choix" id="btn-main" type="button">Bouton Attraper à droite</button>
+        </div>
+      </section>
+      <p class="petit mention">Prototype étudiant. Ce jeu n'est pas un dispositif médical.</p>
+    </section>
+
+    <!-- ===== Onglet Carnet de vol ===== -->
+    <section class="feuille" id="page-carnet" role="tabpanel" aria-labelledby="tab-carnet" hidden>
+      <header class="entete">
+        <h1 class="titre">Carnet de vol</h1>
+        <p class="texte">Chaque vol ajoute une ligne. Le jeu repart de ton dernier niveau.</p>
+      </header>
+      <div class="bascule" role="group" aria-label="Carnet affiché">
+        <button class="choix" id="btn-mien" type="button" aria-pressed="true">Mon carnet</button>
+        <button class="choix" id="btn-exemple" type="button" aria-pressed="false">Exemple sur 4 semaines</button>
+      </div>
+      <p class="note-rouge" id="carnet-note" hidden>Exemple simulé&nbsp;: 20 séances inventées pour montrer un mois d'entraînement.</p>
+      <div class="vide" id="carnet-vide" hidden>
+        <p class="texte">Ton carnet est encore vide. Fais ton premier vol pour écrire la première ligne.</p>
+        <button class="bouton" id="btn-decoller-2" type="button">Décoller</button>
+      </div>
+      <div class="bloc" id="carnet-plein" style="gap:24px">
+        <dl class="lignes" id="carnet-resume"></dl>
+        <section class="bloc">
+          <h2>Indice Focus</h2>
+          <p class="petit">Sur 100, mesuré à chaque séance pendant la double tâche.</p>
+          <div id="g-focus"></div>
+        </section>
+        <section class="bloc">
+          <h2>Niveaux atteints</h2>
+          <p class="petit">De 1 à 10. Plus le niveau monte, plus le jeu va vite.</p>
+          <div id="g-niveaux"></div>
+        </section>
+        <section class="bloc">
+          <h2>Temps de réaction</h2>
+          <p class="petit">En millisecondes. La bande montre la régularité&nbsp;: plus elle est fine, plus les réponses sont stables.</p>
+          <div id="g-tr"></div>
+        </section>
+        <section class="bloc">
+          <h2>Tous les vols</h2>
+          <ol class="vols" id="carnet-liste"></ol>
+        </section>
+        <button class="lien" id="btn-effacer" type="button">Effacer mon carnet</button>
+        <div class="confirme" id="confirme-effacer" hidden>
+          <span>Effacer tous tes vols&nbsp;?</span>
+          <button class="choix" id="btn-effacer-oui" type="button">Oui, effacer</button>
+          <button class="choix" id="btn-effacer-non" type="button">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Onglet La science ===== -->
+    <section class="feuille" id="page-science" role="tabpanel" aria-labelledby="tab-science" hidden>
+      <header class="entete">
+        <h1 class="titre">La science du jeu</h1>
+        <p class="texte">Focalis reprend le mécanisme d'un jeu vidéo thérapeutique américain, EndeavorRx. Voici comment il fonctionne.</p>
+      </header>
+      <section class="lecon">
+        <h2>Deux tâches en même temps</h2>
+        <p class="texte">Pendant le vol, ton cerveau fait deux choses à la fois. Il garde l'avion dans le courant d'air, sans pause. Et il trie des gommettes&nbsp;: attraper l'étoile jaune, ignorer les autres.</p>
+        <p class="texte">Chaque tâche gêne l'autre. Cette gêne s'appelle l'interférence, et c'est elle que le jeu fait travailler.</p>
+      </section>
+      <section class="lecon">
+        <h2>Un jeu qui s'ajuste à toi</h2>
+        <p class="texte">Deux réglages indépendants suivent tes résultats en direct. Ils visent 80&nbsp;% de réussite&nbsp;: assez dur pour progresser, assez facile pour ne pas décrocher.</p>
+        <ul>
+          <li>Pilotage&nbsp;: au-dessus de 80&nbsp;% du temps dans le courant, l'avion accélère et les virages se resserrent. En dessous, tout ralentit.</li>
+          <li>Cibles&nbsp;: chaque étoile attrapée raccourcit un peu le temps pour répondre. Chaque erreur le rallonge quatre fois plus.</li>
+          <li>Récompense&nbsp;: une étoile par tronçon, seulement si les deux tâches dépassent 80&nbsp;% en même temps.</li>
+        </ul>
+        <div class="schema" id="schema-escalier"></div>
+        <p class="petit">Entre deux séances, le jeu repart un peu en dessous du dernier niveau atteint.</p>
+      </section>
+      <section class="lecon">
+        <h2>Ce que le jeu mesure</h2>
+        <ul>
+          <li>Niveau de pilotage&nbsp;: la difficulté à laquelle tu restes 80&nbsp;% du temps dans le courant.</li>
+          <li>Temps de réaction&nbsp;: le délai moyen pour attraper une étoile, en millisecondes.</li>
+          <li>Sélectivité (d′)&nbsp;: attraper les étoiles sans toucher les leurres.</li>
+          <li>Régularité&nbsp;: l'écart entre tes réponses rapides et tes réponses lentes.</li>
+        </ul>
+        <p class="texte">L'Indice Focus, sur 100, combine le niveau de pilotage, le temps de réaction et la sélectivité, mesurés pendant la double tâche.</p>
+      </section>
+      <section class="lecon">
+        <h2>D'où vient l'idée</h2>
+        <p class="texte">En 2013, une équipe de l'université de Californie à San Francisco publie NeuroRacer dans la revue Nature&nbsp;: conduire sur une route sinueuse tout en réagissant à des panneaux. Après 12 heures d'entraînement en un mois, des adultes de 60 à 85 ans réduisent nettement leur coût de double tâche.</p>
+        <p class="texte">EndeavorRx, de la société Akili, applique ce principe aux enfants avec un TDAH. Les États-Unis l'autorisent sur ordonnance en juin 2020 pour les 8 à 12 ans, puis jusqu'à 17 ans fin 2023. Le protocole&nbsp;: environ 25 minutes par jour, 5 jours par semaine, pendant 4 semaines.</p>
+        <p class="texte">Dans l'essai principal (348 enfants), le score d'attention d'un test informatisé, le TOVA, progresse de 0,93 point avec le jeu contre 0,03 avec un jeu témoin. Les questionnaires remplis par les parents et les cliniciens ne montrent pas de différence nette entre les deux groupes.</p>
+      </section>
+      <section class="lecon">
+        <h2>Ce que ce prototype n'est pas</h2>
+        <p class="texte">Focalis est un prototype étudiant. Ce n'est pas un dispositif médical&nbsp;: il n'a fait l'objet d'aucune étude clinique et ne pose aucun diagnostic. Les mesures affichées décrivent une partie, rien de plus.</p>
+        <p class="texte">EndeavorRx lui-même ne s'utilise pas seul&nbsp;: il complète un suivi médical.</p>
+      </section>
+      <section class="lecon">
+        <h2>Sources</h2>
+        <ul class="sources">
+          <li>Anguera et coll., Video game training enhances cognitive control in older adults, Nature, 2013. <a href="https://doi.org/10.1038/nature12486">doi.org/10.1038/nature12486</a></li>
+          <li>Kollins et coll., essai STARS-ADHD, The Lancet Digital Health, 2020. <a href="https://doi.org/10.1016/S2589-7500(20)30017-0">doi.org/10.1016/S2589-7500(20)30017-0</a></li>
+          <li>FDA, résumé de la décision De Novo DEN200026 pour EndeavorRx, 2020. <a href="https://www.accessdata.fda.gov/cdrh_docs/reviews/DEN200026.pdf">accessdata.fda.gov</a></li>
+          <li>Mesure de l'attention tirée des parties d'AKL-T01, Translational Psychiatry, 2024. <a href="https://doi.org/10.1038/s41398-024-03045-0">doi.org/10.1038/s41398-024-03045-0</a></li>
+        </ul>
+      </section>
+    </section>
+  </main>
+
+  <nav class="intercalaires" id="menu" role="tablist" aria-label="Menu">
+    <button class="onglet o-jouer" role="tab" id="tab-jouer" data-onglet="jouer" aria-selected="true" type="button">Jouer</button>
+    <button class="onglet o-carnet" role="tab" id="tab-carnet" data-onglet="carnet" aria-selected="false" type="button">Carnet de vol</button>
+    <button class="onglet o-science" role="tab" id="tab-science" data-onglet="science" aria-selected="false" type="button">La science</button>
+  </nav>
+
+  <!-- ===== Consignes avant le vol ===== -->
+  <section class="ecran" id="consignes" hidden>
+    <div class="feuille">
+      <header class="entete">
+        <h1 class="titre">Avant de décoller</h1>
+      </header>
+      <ul class="regles">
+        <li>
+          <span class="picto"><svg width="46" height="46" viewBox="-24 -26 48 50" aria-hidden="true"><g stroke="#1c2a78" stroke-width="2" stroke-linejoin="round"><polygon points="0,-22 -18,18 -3,13" fill="#fff"/><polygon points="0,-22 18,18 3,13" fill="#e9ecfb"/><polygon points="0,-22 -3,13 0,19 3,13" fill="#c9cff0"/></g></svg></span>
+          <div><strong>Pilote</strong><p id="consigne-pilote">Glisse ton pouce de gauche à droite pour garder l'avion dans le courant d'air.</p></div>
+        </li>
+        <li>
+          <span class="picto" id="picto-cible"></span>
+          <div><strong>Attrape</strong><p id="consigne-attrape">Appuie sur le bouton jaune dès qu'une étoile jaune apparaît.</p></div>
+        </li>
+        <li>
+          <span class="picto" id="picto-leurres"></span>
+          <div><strong>Ignore</strong><p>Ne touche à rien pour les autres gommettes.</p></div>
+        </li>
+      </ul>
+      <p class="texte">Le vol dure 1 minute&nbsp;: tu pilotes, puis tu attrapes, puis tu fais les deux en même temps.</p>
+      <div class="actions">
+        <button class="bouton" id="btn-partir" type="button">C'est parti</button>
+        <button class="bouton calme" id="btn-retour" type="button">Retour</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Le vol ===== -->
+  <section class="vol" id="vol" hidden>
+    <canvas id="ciel"></canvas>
+    <div class="hud">
+      <div class="hud-haut">
+        <div class="compteur" aria-label="Points"><span id="hud-icone"></span><span id="hud-points">0</span></div>
+        <ol class="frise" aria-label="Étapes du vol">
+          <li><i></i><span>Piloter</span></li>
+          <li><i></i><span>Attraper</span></li>
+          <li><i></i><span>Les deux</span></li>
+        </ol>
+        <button class="rond" id="btn-quitter" type="button" aria-label="Quitter le vol">×</button>
+      </div>
+      <div class="hud-niveaux">
+        <span class="puce" id="puce-nav">Pilotage <b>2,0</b><em></em></span>
+        <span class="troncons" id="hud-troncons" aria-label="Étoiles de tronçon"></span>
+        <span class="puce" id="puce-tap">Cibles <b>2,0</b><em></em></span>
+      </div>
+    </div>
+    <div class="annonce" id="annonce" aria-live="polite"></div>
+    <div class="conseil" id="conseil"></div>
+    <div class="commandes" id="commandes">
+      <div class="manche" id="manche"><div class="rail" id="rail"><div class="curseur" id="curseur"></div></div><span id="manche-txt">Glisse pour piloter</span></div>
+      <div class="gachette" id="gachette"><span id="gachette-icone"></span><span id="gachette-txt">Attraper</span></div>
+    </div>
+  </section>
+
+  <!-- ===== Bilan du vol ===== -->
+  <section class="ecran" id="bilan" hidden>
+    <div class="feuille">
+      <header class="entete">
+        <h1 class="titre">Vol terminé</h1>
+        <p class="appreciation" id="bilan-mot"></p>
+      </header>
+      <div class="bilan-tete">
+        <div class="focus"><span class="petit">Indice Focus</span><strong id="bilan-focus">0</strong><span class="petit">sur 100</span></div>
+        <div class="bilan-etoiles"><span class="gommettes" id="bilan-etoiles"></span><span class="petit" id="bilan-etoiles-txt"></span><span class="petit" id="bilan-points"></span></div>
+      </div>
+      <p class="texte" id="bilan-delta"></p>
+      <section class="bloc">
+        <h2>Pilotage</h2>
+        <dl class="lignes" id="bilan-nav"></dl>
+      </section>
+      <section class="bloc">
+        <h2>Cibles</h2>
+        <dl class="lignes" id="bilan-tap"></dl>
+      </section>
+      <section class="bloc">
+        <h2 id="bilan-titre-courbe">Le jeu s'est ajusté à toi</h2>
+        <p class="petit">Niveau de difficulté pendant le vol, de 1 à 10.</p>
+        <div id="g-vol"></div>
+      </section>
+      <div class="actions">
+        <button class="bouton" id="btn-rejouer" type="button">Rejouer</button>
+        <button class="bouton calme" id="btn-vers-carnet" type="button">Voir mon carnet de vol</button>
+        <button class="bouton calme" id="btn-menu" type="button">Retour au menu</button>
+      </div>
+      <p class="petit mention">Ces mesures décrivent ta partie. Ce n'est pas un diagnostic.</p>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+'use strict';
+/* =====================================================================
+   FOCALIS : coeur du jeu (logique pure, sans affichage)
+   Double tache : pilotage continu + tri de cibles (go / no-go).
+   Deux escaliers adaptatifs independants visent 80 % de reussite.
+   ===================================================================== */
+
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+const mix = (a, b, t) => a + (b - a) * t;
+const moyenne = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+const ecartType = a => {
+  if (a.length < 2) return null;
+  const m = moyenne(a);
+  return Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1));
+};
+
+function alea32(graine) {
+  let a = graine >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  let u = 0, v = 0;
+  while (!u) u = rng();
+  while (!v) v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function melanger(t, rng) {
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const x = t[i]; t[i] = t[j]; t[j] = x;
+  }
+  return t;
+}
+
+/* ---------- Regles du vol de demo ---------- */
+const REGLES = {
+  etapes: [
+    { id: 'compte', d: 2.4 },    // 3, 2, 1
+    { id: 'pilote', d: 10 },     // tache 1 seule : etalonnage du pilotage
+    { id: 'annonce2', d: 2.4 },
+    { id: 'attrape', d: 10 },    // tache 2 seule : etalonnage des cibles
+    { id: 'annonce3', d: 2.4 },
+    { id: 'double', d: 36 },     // les deux taches : l'entrainement
+    { id: 'sortie', d: 1.4 },
+  ],
+  depart: 2,
+  reprise: 1.2,   // pendant l'annonce de l'etape 3, l'avion reste en pilote automatique 1,2 s puis rend la main
+  // Pilotage : toutes les secondes, le niveau bouge de gain x (part du temps dans le courant - 80 %)
+  pilotage: { vise: 0.80, gain: 1.5, fenetre: 1.0 },
+  // Cibles : +0,30 par etoile attrapee, -1,20 par erreur (rapport 1 pour 4 = equilibre a 80 %)
+  cibles: {
+    monte: 0.30, descend: 1.20, tapVide: 0.60,
+    sac: [1, 1, 1, 0, 0],          // 3 cibles pour 2 leurres, tirage sans remise
+    pauseMin: 0.6, pauseMax: 1.2,  // attente imprevisible entre deux gommettes
+    tropTot: 0.08, tropTard: 0.40, rebond: 0.12,
+  },
+  troncons: 3,   // la double mission est notee en 3 troncons
+  seuil: 0.80,   // une etoile si les DEUX taches depassent 80 % sur le troncon
+};
+REGLES.dureeTotale = REGLES.etapes.reduce((s, e) => s + e.d, 0);
+
+/* ---------- Niveau -> difficulte ---------- */
+const vitessePour = n => 240 + 50 * (n - 1);              // defilement (px/s pour 700 px de haut)
+const segmentPour = n => 300 - 14 * (n - 1);              // longueur d'un virage
+const ecartPour = n => 0.16 + 0.03 * (n - 1);             // ampleur d'un virage (part de la largeur)
+const demiLargeurPour = n => 0.125 - 0.0062 * (n - 1);    // demi-largeur du courant
+const fenetrePour = n => 1.3 * Math.pow(0.888, n - 1);    // temps pour repondre (s) : 1,30 s -> 0,45 s
+
+/* ---------- Detection du signal ---------- */
+function probit(p) {
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239];
+  const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+  const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+  const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  const bas = 0.02425;
+  let q, r;
+  if (p < bas) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+  }
+  if (p <= 1 - bas) {
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  q = Math.sqrt(-2 * Math.log(1 - p));
+  return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+}
+// d' = z(taux de cibles attrapees) - z(taux de leurres touches), correction d'un demi-essai aux extremes
+function dPrime(attrapees, nCibles, fausses, nLeurres) {
+  if (!nCibles || !nLeurres) return null;
+  const H = borne(attrapees / nCibles, 0.5 / nCibles, 1 - 0.5 / nCibles);
+  const F = borne(fausses / nLeurres, 0.5 / nLeurres, 1 - 0.5 / nLeurres);
+  return probit(H) - probit(F);
+}
+// Indice Focus (demo) : moyenne du niveau de pilotage et d'un score cibles (vitesse + selectivite), sur 100
+// La vitesse ne compte que si l'on trie vraiment : appuyer vite sur tout ne rapporte rien.
+function indiceFocus(nav, tr, d) {
+  const n = borne((nav - 1) / 9, 0, 1);
+  const s = d == null ? 0 : borne(d / 3.5, 0, 1);
+  const v = (tr == null ? 0 : borne((1.1 - tr) / (1.1 - 0.38), 0, 1)) * borne(s / 0.4, 0, 1);
+  const cibles = Math.sqrt((v * v + s * s) / 2);
+  return Math.round(100 * (n + cibles) / 2);
+}
+
+/* ---------- Un vol ---------- */
+class Vol {
+  constructor(o = {}) {
+    this.rng = o.rng || Math.random;
+    this.mode = o.mode || 'demo';            // 'demo' ou 'vitrine' (apercu du menu)
+    this.ech = o.ech || 1;                   // echelle des distances (hauteur / 700)
+    this.nav = this.navDepart = borne(o.nav == null ? REGLES.depart : o.nav, 1, 10);
+    this.tap = this.tapDepart = borne(o.tap == null ? REGLES.depart : o.tap, 1, 10);
+    this.t = 0; this.fini = false;
+    this.iEtape = 0; this.tEtape = 0;
+    this.etape = this.mode === 'vitrine' ? 'vitrine' : REGLES.etapes[0].id;
+    this.compte = 3;
+    this.dist = 0; this.vit = 0;
+    this.x = 0.5; this.xVise = 0.5; this.vx = 0;   // position de l'avion, de 0 a 1
+    this.dedans = true; this.tHors = 0;
+    this.auto = this.mode === 'vitrine';
+    const d0 = demiLargeurPour(this.nav);
+    this.noeuds = [{ s: -3000, x: 0.5, d: d0 }, { s: 620 * this.ech, x: 0.5, d: d0 }];
+    this._i = 0; this._sens = 0;
+    this.fen = { dedans: 0, total: 0 };
+    this.mesNav = { pilote: { dedans: 0, total: 0 }, double: { dedans: 0, total: 0 } };
+    this.stim = null; this.sac = [];
+    this.prochain = this.mode === 'vitrine' ? 1 : Infinity;
+    this.dernierOubli = -9; this.dernierTap = -9;
+    this.essais = []; this.tapsVides = { attrape: 0, double: 0 };
+    this.serie = 0; this.attrapees = 0;
+    this.points = 0; this.metres = 0;
+    this.histo = []; this._tHisto = 0; this.ajustements = 0;
+    this.troncons = []; this.tr = null; this.tFinDouble = 0;
+    this.evts = [];
+    this._prolonger();
+  }
+
+  /* --- le courant d'air : une suite de virages tires au hasard, plus serres quand le niveau monte --- */
+  _prolonger() {
+    const fin = this.dist + 1500 * this.ech;
+    let dernier = this.noeuds[this.noeuds.length - 1];
+    while (dernier.s < fin) {
+      const n = this.nav;
+      let sens = this.rng() < 0.5 ? -1 : 1;
+      if (dernier.x > 0.68) sens = -1;
+      else if (dernier.x < 0.32) sens = 1;
+      else if (this._sens && this.rng() < 0.72) sens = -this._sens;
+      const ampleur = ecartPour(n) * (0.55 + 0.45 * this.rng());
+      this._sens = sens;
+      dernier = { s: dernier.s + segmentPour(n) * this.ech, x: borne(dernier.x + sens * ampleur, 0.2, 0.8), d: demiLargeurPour(n) };
+      this.noeuds.push(dernier);
+    }
+    while (this.noeuds.length > 3 && this.noeuds[1].s < this.dist - 900 * this.ech) this.noeuds.shift();
+  }
+  // centre (x) et demi-largeur (d) du courant a la distance s
+  trace(s) {
+    const N = this.noeuds;
+    let i = this._i;
+    if (i > N.length - 2 || N[i].s > s) i = 0;
+    while (i < N.length - 2 && N[i + 1].s <= s) i++;
+    this._i = i;
+    const a = N[i], b = N[i + 1];
+    const u = borne((s - a.s) / (b.s - a.s), 0, 1), k = (1 - Math.cos(Math.PI * u)) / 2;
+    return { x: a.x + (b.x - a.x) * k, d: a.d + (b.d - a.d) * k };
+  }
+
+  /* --- escaliers adaptatifs --- */
+  _bougerNav(delta) {
+    const avant = this.nav;
+    this.nav = borne(this.nav + delta, 1, 10);
+    if (this.nav !== avant) { this.ajustements++; this.evts.push({ type: 'niveau', quoi: 'nav', de: avant, a: this.nav }); }
+  }
+  _bougerTap(delta) {
+    const avant = this.tap;
+    this.tap = borne(this.tap + delta, 1, 10);
+    if (this.tap !== avant) { this.ajustements++; this.evts.push({ type: 'niveau', quoi: 'tap', de: avant, a: this.tap }); }
+  }
+
+  /* --- deroule du vol --- */
+  _entrer(id) {
+    this.evts.push({ type: 'etape', id });
+    if (id === 'annonce2') this.auto = true;
+    else if (id === 'attrape') this.prochain = this.t + 0.9;
+    else if (id === 'double') { this.prochain = this.t + 1.0; this.tr = this._nouveauTroncon(); this.fen.dedans = this.fen.total = 0; }
+    else if (id === 'sortie') this.auto = true;
+  }
+  _quitter(id) {
+    if (id === 'attrape' || id === 'double') {
+      if (this.stim && !this.stim.fait) { this.stim.fait = true; this.stim.issue = 'annule'; this.stim.tFin = this.t; }
+      this.prochain = Infinity;
+    }
+    if (id === 'pilote') this.fen.dedans = this.fen.total = 0;
+    if (id === 'double') { this.tFinDouble = this.t; this._fermerTroncon(); }
+  }
+  _nouveauTroncon() { return { navD: 0, navT: 0, attrape: 0, oubli: 0, erreur: 0, ignore: 0, vides: 0 }; }
+  _fermerTroncon() {
+    const q = this.tr;
+    if (!q) return;
+    const nav = q.navT > 0 ? q.navD / q.navT : 0;
+    const reponses = q.attrape + q.oubli + q.erreur + q.vides;
+    const tap = reponses ? q.attrape / reponses : 0;
+    const ok = nav >= REGLES.seuil && tap >= REGLES.seuil;
+    if (ok) this.points += 100;
+    this.troncons.push({ nav, tap, ok });
+    this.evts.push({ type: 'troncon', i: this.troncons.length - 1, ok, nav, tap });
+    this.tr = null;
+  }
+
+  maj(dt) {
+    if (this.fini) return;
+    this.t += dt;
+    if (this.mode !== 'vitrine') {
+      this.tEtape += dt;
+      let e = REGLES.etapes[this.iEtape];
+      while (this.tEtape >= e.d) {
+        this.tEtape -= e.d;
+        this._quitter(e.id);
+        this.iEtape++;
+        if (this.iEtape >= REGLES.etapes.length) { this.fini = true; this.etape = 'fin'; this.evts.push({ type: 'fin' }); return; }
+        e = REGLES.etapes[this.iEtape];
+        this.etape = e.id;
+        this._entrer(e.id);
+      }
+      if (this.etape === 'compte') {
+        const n = 3 - Math.floor(this.tEtape / 0.8);
+        if (n !== this.compte && n >= 1) { this.compte = n; this.evts.push({ type: 'compte', n }); }
+      }
+      if (this.etape === 'annonce3' && this.auto && this.tEtape >= REGLES.reprise) { this.auto = false; this.xVise = this.x; this.evts.push({ type: 'main' }); }
+      if (this.etape === 'double' && this.auto) { this.auto = false; this.xVise = this.x; }
+      if (this.etape === 'double' && this.tr && this.troncons.length < REGLES.troncons - 1) {
+        const duree = e.d / REGLES.troncons;
+        if (this.tEtape >= (this.troncons.length + 1) * duree) { this._fermerTroncon(); this.tr = this._nouveauTroncon(); }
+      }
+    }
+
+    // defilement : la vitesse suit le niveau de pilotage
+    const vCible = vitessePour(this.nav) * this.ech * (this.etape === 'sortie' ? 1.3 : 1);
+    this.vit += (vCible - this.vit) * (1 - Math.exp(-dt * 2.2));
+    this.dist += this.vit * dt;
+    this._prolonger();
+
+    // avion
+    const ici = this.trace(this.dist);
+    if (this.auto) this.xVise = this.trace(this.dist + this.vit * 0.14).x;
+    const avant = this.x;
+    this.x = borne(this.x + (this.xVise - this.x) * (1 - Math.exp(-dt * (this.auto ? 7 : 18))), 0.04, 0.96);
+    if (dt > 0) this.vx += ((this.x - avant) / dt - this.vx) * (1 - Math.exp(-dt * 10));
+    const dedans = Math.abs(this.x - ici.x) <= ici.d;
+    const mesure = this.etape === 'pilote' || this.etape === 'double';
+    if (dedans !== this.dedans) { this.dedans = dedans; if (mesure) this.evts.push({ type: dedans ? 'retour' : 'ecart' }); }
+    this.tHors = dedans ? 0 : this.tHors + dt;
+
+    // escalier du pilotage : une decision par seconde
+    if (mesure) {
+      const m = this.mesNav[this.etape];
+      m.total += dt; if (dedans) m.dedans += dt;
+      if (dedans) { const pas = this.vit * dt / (28 * this.ech); this.metres += pas; this.points += pas; }   // 1 point par metre dans le courant
+      this.fen.total += dt; if (dedans) this.fen.dedans += dt;
+      if (this.tr) { this.tr.navT += dt; if (dedans) this.tr.navD += dt; }
+      if (this.fen.total >= REGLES.pilotage.fenetre) {
+        this._bougerNav(REGLES.pilotage.gain * (this.fen.dedans / this.fen.total - REGLES.pilotage.vise));
+        this.fen.dedans = this.fen.total = 0;
+      }
+    }
+
+    // gommettes
+    if (this.etape === 'attrape' || this.etape === 'double' || this.mode === 'vitrine') {
+      const s = this.stim;
+      if (s && !s.fait && this.t >= s.tDebut + s.fenetre) this._resoudre(s.cible ? 'oubli' : 'ignore', null);
+      if ((!this.stim || this.stim.fait) && this.t >= this.prochain) this._lancer();
+    }
+
+    // memoire des niveaux (courbe de difficulte)
+    this._tHisto += dt;
+    if (this._tHisto >= 0.5) {
+      this._tHisto = 0;
+      if (this.mode !== 'vitrine' && this.etape !== 'compte' && this.etape !== 'sortie') {
+        this.histo.push({ t: Math.round(this.t * 10) / 10, nav: Math.round(this.nav * 100) / 100, tap: Math.round(this.tap * 100) / 100, e: this.etape });
+      }
+    }
+  }
+
+  _lancer() {
+    if (!this.sac.length) this.sac = melanger(REGLES.cibles.sac.slice(), this.rng);
+    const cible = !!this.sac.pop();
+    let genre = 'cible';
+    if (!cible) {
+      const choix = ['bleu', 'rouge'];
+      if (this.tap >= 3.5) choix.push('rond');    // meme couleur, autre forme : le leurre devient plus fin
+      if (this.tap >= 5.5) choix.push('coeur');
+      genre = choix[Math.floor(this.rng() * choix.length)];
+    }
+    this.stim = { cible, genre, tDebut: this.t, fenetre: fenetrePour(this.tap), dx: (this.rng() - 0.5) * 0.36, fait: false, issue: null, tFin: 0, tr: null, etape: this.etape };
+    this.prochain = Infinity;
+    this.evts.push({ type: 'stim', stim: this.stim });
+  }
+  _resoudre(issue, tr) {
+    const s = this.stim, R = REGLES.cibles;
+    s.fait = true; s.issue = issue; s.tFin = this.t; s.tr = tr;
+    if (this.mode !== 'vitrine') {
+      this.essais.push({ etape: s.etape, cible: s.cible, genre: s.genre, issue, tr, fenetre: s.fenetre });
+      if (this.tr) this.tr[issue]++;
+      if (issue === 'attrape') this._bougerTap(R.monte);
+      else if (issue === 'oubli' || issue === 'erreur') this._bougerTap(-R.descend);
+    }
+    if (issue === 'attrape') { this.serie++; this.attrapees++; if (this.mode !== 'vitrine') this.points += 40 + 5 * Math.min(this.serie, 10); }
+    else if (issue !== 'ignore') this.serie = 0;
+    if (issue === 'erreur') this.points = Math.max(0, this.points - 20);
+    if (issue === 'oubli') this.dernierOubli = this.t;
+    this.prochain = this.t + R.pauseMin + this.rng() * (R.pauseMax - R.pauseMin);
+    this.evts.push({ type: issue, stim: s, tr, serie: this.serie });
+  }
+  // le joueur touche l'ecran a l'instant tTap (en secondes de vol)
+  toucher(tTap) {
+    if (this.fini) return;
+    if (tTap == null) tTap = this.t;
+    const R = REGLES.cibles;
+    const actif = this.etape === 'attrape' || this.etape === 'double' || this.mode === 'vitrine';
+    if (!actif) { this.evts.push({ type: 'tapMuet' }); return; }
+    if (tTap - this.dernierTap < R.rebond) return;
+    this.dernierTap = tTap;
+    const s = this.stim;
+    if (s && !s.fait) {
+      const tr = tTap - s.tDebut;
+      if (tr > s.fenetre) {
+        this._resoudre(s.cible ? 'oubli' : 'ignore', null);
+        if (s.cible) { this.evts.push({ type: 'tropTard' }); return; }
+      } else if (tr >= R.tropTot) {
+        this._resoudre(s.cible ? 'attrape' : 'erreur', tr);
+        return;
+      }
+    } else if (tTap - this.dernierOubli < R.tropTard) {
+      this.evts.push({ type: 'tropTard' });
+      return;
+    }
+    // tap sans gommette a l'ecran : reponse impulsive
+    if (this.mode === 'vitrine') return;
+    this.tapsVides[this.etape]++;
+    this.serie = 0;
+    this.points = Math.max(0, this.points - 10);
+    if (this.tr) this.tr.vides++;
+    this._bougerTap(-R.tapVide);
+    this.evts.push({ type: 'tapVide' });
+  }
+
+  /* --- compte rendu --- */
+  bilan() {
+    const compter = liste => {
+      const r = { nCibles: 0, nLeurres: 0, attrape: 0, oubli: 0, erreur: 0, ignore: 0, trs: [] };
+      for (const e of liste) {
+        if (e.cible) r.nCibles++; else r.nLeurres++;
+        r[e.issue]++;
+        if (e.issue === 'attrape') r.trs.push(e.tr);
+      }
+      r.tr = moyenne(r.trs);
+      return r;
+    };
+    const seul = compter(this.essais.filter(e => e.etape === 'attrape'));
+    const duo = compter(this.essais.filter(e => e.etape === 'double'));
+    const tout = compter(this.essais);
+    const part = m => (m.total > 0 ? m.dedans / m.total : null);
+    const fin = this.histo.filter(h => h.e === 'double' && h.t >= this.tFinDouble - 10);
+    const navFin = fin.length ? moyenne(fin.map(h => h.nav)) : this.nav;
+    const tapFin = fin.length ? moyenne(fin.map(h => h.tap)) : this.tap;
+    // Comme la mesure publiee pour AKL-T01, l'indice se calcule sur la double tache (a defaut, sur tout le vol)
+    const base = duo.nCibles && duo.nLeurres ? duo : tout;
+    const d = dPrime(base.attrape, base.nCibles, base.erreur, base.nLeurres);
+    const vides = this.tapsVides.attrape + this.tapsVides.double;
+    // Cout de la double tache sur le temps de reaction (indicatif : peu d'essais en tache seule)
+    const cout = seul.trs.length >= 2 && duo.trs.length >= 3 ? duo.tr - seul.tr : null;
+    return {
+      navDepart: this.navDepart, tapDepart: this.tapDepart, navFin, tapFin,
+      suiviSeul: part(this.mesNav.pilote), suiviDuo: part(this.mesNav.double),
+      seul, duo, tout,
+      trMoyen: base.tr, trEcart: ecartType(base.trs), dPrime: d, coutTR: cout,
+      oublis: tout.oubli, fausses: tout.erreur, vides, tapsEnTrop: tout.erreur + vides,
+      focus: indiceFocus(navFin, base.tr, d),
+      troncons: this.troncons.slice(), etoiles: this.troncons.filter(q => q.ok).length,
+      ajustements: this.ajustements, attrapees: this.attrapees,
+      points: Math.round(this.points), metres: Math.round(this.metres),
+      histo: this.histo.slice(),
+    };
+  }
+}
+
+/* ---------- Pilote automatique : apercu du menu et essais de l'algorithme ---------- */
+function piloteAuto(vol, p = {}) {
+  const rng = p.rng || Math.random;
+  let bruit = 0, prevu = null, vu = null;
+  return function (dt) {
+    if (!vol.auto) {
+      bruit += -bruit * 2.5 * dt + (p.bruit || 0) * Math.sqrt(dt) * gauss(rng);
+      const cible = vol.trace(vol.dist + vol.vit * (p.anticipe == null ? 0.1 : p.anticipe)).x + bruit;
+      vol.xVise = borne(vol.xVise + (cible - vol.xVise) * (1 - Math.exp(-dt / (p.retard || 0.12))), 0.04, 0.96);
+    }
+    const s = vol.stim;
+    if (s && !s.fait && s !== vu) {
+      vu = s; prevu = null;
+      const repond = s.cible ? rng() >= (p.oubli || 0) : rng() < (p.impulsif || 0);
+      if (repond) prevu = s.tDebut + Math.max(0.15, (p.tr || 0.45) + (p.trEcart || 0.08) * gauss(rng));
+    }
+    if (prevu != null && vol.t >= prevu) { const quand = prevu; prevu = null; vol.toucher(quand); }
+  };
+}
+
+/* ---------- Carnet d'exemple : 20 seances simulees sur 4 semaines (progression logarithmique + bruit) ---------- */
+function carnetExemple(maintenant) {
+  const r = alea32(20261112), jours = [], vols = [];
+  const j = new Date(maintenant == null ? Date.now() : maintenant);
+  j.setHours(17, 30, 0, 0);
+  while (jours.length < 20) {
+    j.setDate(j.getDate() - 1);
+    const s = j.getDay();
+    if (s >= 1 && s <= 5) jours.unshift(j.getTime());
+  }
+  jours.forEach((t, i) => {
+    const p = Math.log(1 + i) / Math.log(20);
+    const nav = borne(2.6 + 3.9 * p + (r() - 0.5) * 0.8, 1, 10);
+    const tap = borne(2.3 + 3.6 * p + (r() - 0.5) * 0.9, 1, 10);
+    const tr = 0.68 - 0.16 * p + (r() - 0.5) * 0.04;
+    const ect = 0.16 - 0.06 * p + (r() - 0.5) * 0.02;
+    const d = 1.5 + 1.5 * p + (r() - 0.5) * 0.3;
+    vols.push({
+      t, nav, tap, nav0: Math.max(1, nav - 1.5), tap0: Math.max(1, tap - 1.5), tr, ect, d,
+      oublis: Math.round(3 - 2 * p + r()), enTrop: Math.round(3 - 2.2 * p + r()),
+      focus: indiceFocus(nav, tr, d), etoiles: Math.min(3, Math.floor(r() * 2 + p * 1.6)),
+    });
+  });
+  return vols;
+}
+
+/* =====================================================================
+   FOCALIS : dessin du vol (canvas 2D)
+   Vue du dessus : champs de Provence, nuages, courant d'air, avion en
+   papier de cahier, gommettes a attraper.
+   ===================================================================== */
+
+const TEINTES = { cible: '#ffc62e', rond: '#ffc62e', coeur: '#ffc62e', bleu: '#3f7fe8', rouge: '#ee4d63' };
+
+function rectArrondi(g, x, y, w, h, r) {
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+function cheminForme(g, genre, r) {
+  g.beginPath();
+  if (genre === 'rond') {
+    g.arc(0, 0, r * 0.82, 0, Math.PI * 2);
+  } else if (genre === 'coeur') {
+    const q = r * 0.95;
+    g.moveTo(0, q * 0.85);
+    g.bezierCurveTo(-q * 1.25, q * 0.05, -q * 0.75, -q * 0.95, 0, -q * 0.35);
+    g.bezierCurveTo(q * 0.75, -q * 0.95, q * 1.25, q * 0.05, 0, q * 0.85);
+  } else {
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.5 : r;
+      if (i) g.lineTo(Math.cos(a) * q, Math.sin(a) * q); else g.moveTo(Math.cos(a) * q, Math.sin(a) * q);
+    }
+  }
+  g.closePath();
+}
+// une gommette : forme coloree, lisere blanc d'autocollant, petite ombre
+function dessinerGommette(g, genre, x, y, r, rot, alpha) {
+  const c = TEINTES[genre] || TEINTES.cible;
+  g.save();
+  g.translate(x, y);
+  if (rot) g.rotate(rot);
+  if (alpha != null) g.globalAlpha = alpha;
+  g.lineJoin = 'round';
+  g.save();
+  g.shadowColor = 'rgba(20,30,95,.38)'; g.shadowBlur = r * 0.3; g.shadowOffsetY = r * 0.14;
+  cheminForme(g, genre, r);
+  g.fillStyle = '#fff'; g.strokeStyle = '#fff'; g.lineWidth = r * 0.46;
+  g.stroke(); g.fill();
+  g.restore();
+  cheminForme(g, genre, r);
+  g.fillStyle = c; g.strokeStyle = c; g.lineWidth = r * 0.12;
+  g.stroke(); g.fill();
+  g.globalAlpha = (alpha == null ? 1 : alpha) * 0.4;
+  g.fillStyle = '#fff';
+  g.beginPath(); g.ellipse(-r * 0.2, -r * 0.3, r * 0.2, r * 0.1, -0.6, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+class Rendu {
+  constructor(canvas, o = {}) {
+    this.cv = canvas;
+    this.g = canvas.getContext('2d');
+    this.vitrine = !!o.vitrine;
+    this.W = 0; this.H = 0; this.dpr = 1; this.u = 1; this.yAvion = 0;
+    this.sol = null; this.sprites = null;
+    this.nuages = []; this.filets = [];
+    this.parts = []; this.textes = []; this.vus = []; this.sillage = [];
+    this.voile = 0; this.tPrec = 0; this.dernierStim = null;
+    this.police = '"Lexend", "Trebuchet MS", system-ui, sans-serif';
+  }
+
+  taille(w, h) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = Math.round(w); h = Math.round(h);
+    if (w < 2 || h < 2) return;
+    if (w === this.W && h === this.H && dpr === this.dpr) return;
+    const refaireSol = !this.sol || Math.abs(w - this.W) > 1;
+    this.W = w; this.H = h; this.dpr = dpr;
+    this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr);
+    this.u = borne(w / 390, 0.7, 1.25);
+    this.yAvion = h * (this.vitrine ? 0.72 : 0.66);
+    if (refaireSol) this._fabriquerSol();
+    if (!this.sprites) this._fabriquerNuages();
+  }
+  yGommette() { return this.vitrine ? this.H * 0.3 : Math.max(this.H * 0.25, 150 * this.u); }
+  rayonGommette() { return (this.vitrine ? 22 : 30) * this.u; }
+  // position a l'ecran de la gommette en cours (pour le toucher direct)
+  posGommette(stim) { return { x: (0.5 + stim.dx) * this.W, y: this.yGommette(), r: this.rayonGommette() }; }
+  vider() { this.parts.length = 0; this.textes.length = 0; this.vus.length = 0; this.sillage.length = 0; this.voile = 0; this.tPrec = 0; this.dernierStim = null; }
+
+  /* ---------- decor fabrique une fois ---------- */
+  _fabriquerSol() {
+    const w = Math.max(64, Math.ceil(this.W)), h = 960;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'), r = alea32(2026);
+    g.fillStyle = '#c6d391'; g.fillRect(0, 0, w, h);   // chemins entre les parcelles
+    const sortes = [
+      { f: '#8f74c9', l: '#7a5eb8', m: 'raies' }, { f: '#9d84d6', l: '#8368c3', m: 'raies' }, { f: '#8a6fc4', l: '#7459b3', m: 'raies' },  // lavande
+      { f: '#ecd277', l: '#dcbf57', m: 'raies' }, { f: '#f1dc8c', l: '#e3cb6c', m: 'uni' },                                                // ble
+      { f: '#83b862', l: '#73a853', m: 'uni' }, { f: '#9fce78', l: '#8cbd66', m: 'raies' },                                                // prairies
+      { f: '#f3c63a', l: '#d9a91f', m: 'points' },                                                                                         // tournesols
+      { f: '#c59d70', l: '#b1885c', m: 'raies' },                                                                                          // labour
+    ];
+    let y = 0;
+    while (y < h) {
+      let bh = 78 + r() * 80;
+      if (h - y - bh < 70) bh = h - y;
+      let x = -r() * 70;
+      while (x < w) {
+        const bw = 64 + r() * 96, s = sortes[Math.floor(r() * sortes.length)];
+        this._champ(g, x + 2.5, y + 2.5, bw - 5, bh - 5, s, r);
+        x += bw;
+      }
+      y += bh;
+    }
+    const onde = (y0, base, a1, n1, a2, n2, ph) => base + a1 * Math.sin(2 * Math.PI * n1 * y0 / h + ph) + a2 * Math.sin(2 * Math.PI * n2 * y0 / h + ph * 2);
+    const ruban = (fx, larg, coul) => {
+      g.beginPath();
+      for (let yy = -16; yy <= h + 16; yy += 8) { const xx = fx(yy); if (yy === -16) g.moveTo(xx, yy); else g.lineTo(xx, yy); }
+      g.lineWidth = larg; g.strokeStyle = coul; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke();
+    };
+    const riviere = yy => onde(yy, w * 0.2, 30, 2, 11, 5, 0.6);
+    const route = yy => onde(yy, w * 0.7, 24, 1, 8, 3, 2);
+    ruban(riviere, 24, '#a9cc8c'); ruban(riviere, 15, '#68b0e8'); ruban(riviere, 6, '#8fcaf3');
+    ruban(route, 5.5, '#f1ead2');
+    // arbres
+    for (let i = 0; i < 54; i++) {
+      const ax = r() * w, ay = r() * h, ar = 4.5 + r() * 4;
+      for (const dy of [-h, 0, h]) {
+        g.fillStyle = '#4e8f4a'; g.beginPath(); g.arc(ax, ay + dy, ar, 0, 7); g.fill();
+        g.fillStyle = '#6cab60'; g.beginPath(); g.arc(ax - ar * 0.25, ay + dy - ar * 0.25, ar * 0.55, 0, 7); g.fill();
+      }
+    }
+    // un village le long de la route
+    const vy = h * 0.34, vx = route(vy), toits = ['#d9744c', '#c8623d', '#e39063', '#b9563a'];
+    for (let i = 0; i < 15; i++) {
+      const hx = vx + (r() * 2 - 1) * 46, hy = vy + (r() * 2 - 1) * 40, hw = 9 + r() * 5, hh = 7 + r() * 3;
+      g.save(); g.translate(hx, hy); g.rotate((r() - 0.5) * 1.2);
+      g.fillStyle = toits[i % toits.length]; g.fillRect(-hw / 2, -hh / 2, hw, hh);
+      g.fillStyle = 'rgba(255,255,255,.28)'; g.fillRect(-hw / 2, -hh / 2, hw, hh / 2);
+      g.restore();
+    }
+    g.fillStyle = '#8b8fa3'; g.fillRect(vx - 9, vy - 6, 18, 11);
+    g.fillStyle = '#6f7389'; g.fillRect(vx + 5, vy - 9, 8, 8);
+    this.sol = c;
+  }
+  _champ(g, x, y, w, h, s, r) {
+    if (w < 6 || h < 6) return;
+    g.save();
+    g.beginPath(); rectArrondi(g, x, y, w, h, 5);
+    g.fillStyle = s.f; g.fill(); g.clip();
+    if (s.m === 'raies') {
+      const angle = [0, 0.45, -0.45, Math.PI / 2][Math.floor(r() * 4)];
+      g.translate(x + w / 2, y + h / 2); g.rotate(angle);
+      g.strokeStyle = s.l; g.lineWidth = 2.2;
+      const R = Math.hypot(w, h) / 2 + 4;
+      g.beginPath();
+      for (let k = -R; k <= R; k += 6.5) { g.moveTo(-R, k); g.lineTo(R, k); }
+      g.stroke();
+    } else if (s.m === 'points') {
+      g.fillStyle = s.l;
+      let rang = 0;
+      for (let j = y + 4; j < y + h; j += 7, rang++) {
+        for (let i = x + 4 + (rang % 2) * 3.5; i < x + w; i += 7) { g.beginPath(); g.arc(i, j, 1.6, 0, 7); g.fill(); }
+      }
+    }
+    g.restore();
+  }
+  _fabriquerNuages() {
+    const r = alea32(5);
+    this.sprites = [];
+    for (let k = 0; k < 3; k++) {
+      const c = document.createElement('canvas'); c.width = 260; c.height = 150;
+      const g = c.getContext('2d');
+      for (let i = 0; i < 7 + k; i++) {
+        const x = 55 + r() * 150, y = 52 + r() * 46, ray = 28 + r() * 24;
+        const gr = g.createRadialGradient(x, y, 0, x, y, ray);
+        gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(0.55, 'rgba(255,255,255,.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(x, y, ray, 0, 7); g.fill();
+      }
+      this.sprites.push(c);
+    }
+    this.nuages = [];
+    for (let i = 0; i < 6; i++) this.nuages.push({ x: r(), y: (i + r() * 0.7) / 6, s: 0.55 + r() * 0.6, k: i % 3, par: 0.55, a: 0.78 });
+    for (let i = 0; i < 3; i++) this.nuages.push({ x: r(), y: (i + r() * 0.7) / 3, s: 1.3 + r() * 0.5, k: i % 3, par: 1.5, a: 0.2 });
+    this.filets = [];
+    for (let i = 0; i < 9; i++) this.filets.push({ o: (r() * 2 - 1) * 0.72, p: r(), l: 0.6 + r() * 0.8 });
+  }
+
+  /* ---------- une image ---------- */
+  dessiner(vol) {
+    const g = this.g, W = this.W, H = this.H, u = this.u;
+    if (!W || !H || !this.sol) return;
+    const t = vol.t;
+    const dt = Math.min(0.05, Math.max(0, t - this.tPrec)); this.tPrec = t;
+    const mesure = vol.etape === 'pilote' || vol.etape === 'double';
+    const hors = mesure && !vol.dedans;
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    g.globalAlpha = 1;
+
+    // sol : la dalle de champs defile lentement (on vole haut)
+    const hs = this.sol.height, dec = ((vol.dist * 0.32) % hs + hs) % hs;
+    for (let y = dec - hs; y < H; y += hs) g.drawImage(this.sol, 0, y);
+    // brume d'altitude
+    const brume = g.createLinearGradient(0, 0, 0, H);
+    brume.addColorStop(0, 'rgba(46,124,226,.6)'); brume.addColorStop(1, 'rgba(96,176,242,.44)');
+    g.fillStyle = brume; g.fillRect(0, 0, W, H);
+
+    // nuages bas
+    this._nuages(g, vol, false);
+
+    // courant d'air
+    const yA = this.yAvion, pas = 16 * vol.ech;
+    const G = [], D = [], C = [];
+    for (let s = vol.dist - (H - yA) - 30; s <= vol.dist + yA + 30 + pas; s += pas) {
+      const p = vol.trace(s), y = yA - (s - vol.dist);
+      G.push((p.x - p.d) * W, y); D.push((p.x + p.d) * W, y); C.push(p.x * W, y);
+    }
+    g.beginPath();
+    g.moveTo(G[0], G[1]);
+    for (let i = 2; i < G.length; i += 2) g.lineTo(G[i], G[i + 1]);
+    for (let i = D.length - 2; i >= 0; i -= 2) g.lineTo(D[i], D[i + 1]);
+    g.closePath();
+    g.fillStyle = hors ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.23)';
+    g.fill();
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    for (const bord of [G, D]) {
+      g.beginPath(); g.moveTo(bord[0], bord[1]);
+      for (let i = 2; i < bord.length; i += 2) g.lineTo(bord[i], bord[i + 1]);
+      g.lineWidth = (hors ? 6 : 5) * u; g.strokeStyle = 'rgba(28,42,120,.2)'; g.stroke();   // filet d'encre : le bord reste lisible sur les champs clairs
+      g.lineWidth = (hors ? 3.6 : 2.6) * u; g.strokeStyle = hors ? 'rgba(255,224,130,.98)' : 'rgba(255,255,255,.88)'; g.stroke();
+    }
+    // la trajectoire en pointilles, comme un trait de stylo
+    g.save();
+    g.setLineDash([9 * u, 13 * u]);
+    g.lineDashOffset = (((vol.dist - (H - yA) - 30) % (22 * u)) + 22 * u) % (22 * u);   // pointilles ancres au paysage
+    g.lineWidth = 2 * u; g.strokeStyle = 'rgba(255,255,255,.6)';
+    g.beginPath(); g.moveTo(C[0], C[1]);
+    for (let i = 2; i < C.length; i += 2) g.lineTo(C[i], C[i + 1]);
+    g.stroke();
+    g.restore();
+    // filets d'air qui filent dans le courant
+    const course = H + 160;
+    g.lineWidth = 2.2 * u;
+    for (const f of this.filets) {
+      const y = ((vol.dist * 1.28 + f.p * course) % course) - 80;
+      const lg = (22 + 30 * borne(vol.vit / (700 * vol.ech), 0, 1)) * f.l * u;
+      const p1 = vol.trace(vol.dist + (yA - y)), p2 = vol.trace(vol.dist + (yA - y) + lg);
+      g.strokeStyle = 'rgba(255,255,255,.34)';
+      g.beginPath(); g.moveTo((p1.x + f.o * p1.d) * W, y); g.lineTo((p2.x + f.o * p2.d) * W, y - lg); g.stroke();
+    }
+
+    // sillage de l'avion
+    const sl = this.sillage, dernier = sl[sl.length - 1];
+    if (!dernier || vol.dist - dernier.s > 7 * vol.ech) sl.push({ s: vol.dist, x: vol.x });
+    while (sl.length && sl[0].s < vol.dist - 170 * vol.ech) sl.shift();
+    const xA = vol.x * W, yAv = yA + Math.sin(t * 3.1) * 1.6 * u;
+    if (sl.length > 1) {
+      for (let i = 1; i < sl.length; i++) {
+        const a = i / sl.length;
+        g.strokeStyle = 'rgba(255,255,255,' + (0.5 * a * a).toFixed(3) + ')';
+        g.lineWidth = (1 + 2.6 * a) * u;
+        g.beginPath();
+        g.moveTo(sl[i - 1].x * W, yA + (vol.dist - sl[i - 1].s) + 14 * u);
+        g.lineTo(sl[i].x * W, yA + (vol.dist - sl[i].s) + 14 * u);
+        g.stroke();
+      }
+    }
+
+    this._avion(g, xA, yAv, vol, t, hors);
+    this._gommettes(g, vol, t, dt);
+    this._effets(g, t, dt);
+    this._nuages(g, vol, true);
+
+    // voile sombre quand on sort du courant
+    this.voile += ((hors ? 1 : 0) - this.voile) * (1 - Math.exp(-dt * 7));
+    if (this.voile > 0.02) {
+      const v = g.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.28, W / 2, H * 0.55, Math.max(W, H) * 0.72);
+      v.addColorStop(0, 'rgba(20,28,92,0)'); v.addColorStop(1, 'rgba(20,28,92,' + (0.6 * this.voile).toFixed(3) + ')');
+      g.fillStyle = v; g.fillRect(0, 0, W, H);
+    }
+  }
+
+  _nuages(g, vol, hauts) {
+    const W = this.W, H = this.H, VH = H + 420;
+    for (const n of this.nuages) {
+      if ((n.par > 1) !== hauts) continue;
+      const sp = this.sprites[n.k], w = sp.width * n.s * this.u * (hauts ? 1.5 : 1), h = sp.height * n.s * this.u;
+      const y = ((n.y * VH + vol.dist * n.par) % VH) - 210;
+      const x = n.x * (W + w * 0.6) - w * 0.8;
+      g.globalAlpha = n.a;
+      g.drawImage(sp, x, y, w, h);
+    }
+    g.globalAlpha = 1;
+  }
+
+  _avion(g, x, y, vol, t, hors) {
+    const k = 1.08 * this.u;
+    const vxPx = vol.vx * this.W;
+    const roulis = borne(vxPx / 460, -1, 1);
+    const lacet = Math.atan2(vxPx, Math.max(220 * vol.ech, vol.vit)) * 0.5;
+    const ag = 21 * (1 - 0.42 * Math.max(0, -roulis)), ad = 21 * (1 - 0.42 * Math.max(0, roulis));
+    g.save();
+    g.translate(x, y);
+    // ombre, loin en dessous
+    g.save();
+    g.translate(15 * k, 24 * k); g.scale(0.82, 0.82); g.rotate(lacet);
+    g.fillStyle = 'rgba(20,28,92,.18)';
+    g.beginPath(); g.moveTo(0, -26 * k); g.lineTo(-ag * k, 19 * k); g.lineTo(0, 13 * k); g.lineTo(ad * k, 19 * k); g.closePath(); g.fill();
+    g.restore();
+    g.rotate(lacet + (hors ? Math.sin(t * 36) * 0.075 : 0));
+    g.lineJoin = 'round';
+    const aile = (cote, env, teinte) => {
+      g.beginPath(); g.moveTo(0, -26 * k); g.lineTo(cote * env * k, 19 * k); g.lineTo(cote * 4 * k, 14 * k); g.closePath();
+      g.fillStyle = teinte; g.fill();
+      // reglure du cahier sur l'aile
+      g.save(); g.clip();
+      g.strokeStyle = 'rgba(126,108,214,.55)'; g.lineWidth = 0.9 * k;
+      g.beginPath();
+      for (let j = -18; j <= 18; j += 5.5) { g.moveTo(cote * 0, j * k); g.lineTo(cote * 24 * k, (j + 4) * k); }
+      g.stroke();
+      g.restore();
+    };
+    aile(-1, ag, '#ffffff');
+    aile(1, ad, '#e9ecfb');
+    // le pli central
+    g.beginPath(); g.moveTo(0, -26 * k); g.lineTo(-4 * k, 14 * k); g.lineTo(0, 21 * k); g.lineTo(4 * k, 14 * k); g.closePath();
+    g.fillStyle = '#c9cff0'; g.fill();
+    // trait de marge rouge le long du pli, puis contour a l'encre
+    g.strokeStyle = '#e2475c'; g.lineWidth = 1.1 * k;
+    g.beginPath(); g.moveTo(0, -24 * k); g.lineTo(-ag * 0.42 * k, 15 * k); g.stroke();
+    g.strokeStyle = '#1c2a78'; g.lineWidth = 1.7 * k;
+    g.beginPath();
+    g.moveTo(0, -26 * k); g.lineTo(-ag * k, 19 * k); g.lineTo(-4 * k, 14 * k); g.lineTo(0, 21 * k); g.lineTo(4 * k, 14 * k); g.lineTo(ad * k, 19 * k); g.closePath();
+    g.stroke();
+    g.lineWidth = 1 * k;
+    g.beginPath(); g.moveTo(0, -26 * k); g.lineTo(-4 * k, 14 * k); g.moveTo(0, -26 * k); g.lineTo(4 * k, 14 * k); g.stroke();
+    g.restore();
+  }
+
+  _gommettes(g, vol, t, dt) {
+    const u = this.u, R = this.rayonGommette(), y0 = this.yGommette();
+    if (vol.stim && vol.stim !== this.dernierStim) {
+      this.dernierStim = vol.stim;
+      this.vus.push({ stim: vol.stim, etat: 'la', t0: t, tEtat: t });
+    }
+    for (let i = this.vus.length - 1; i >= 0; i--) {
+      const v = this.vus[i], s = v.stim, x0 = (0.5 + s.dx) * this.W;
+      if (v.etat === 'la' && s.fait) {
+        v.etat = s.issue || 'annule'; v.tEtat = t;
+        if (v.etat === 'attrape') {
+          for (let k = 0; k < 12; k++) {
+            const a = Math.random() * Math.PI * 2, vit = (90 + Math.random() * 190) * u;
+            this.parts.push({ x: x0, y: y0, vx: Math.cos(a) * vit, vy: Math.sin(a) * vit - 60 * u, t0: t, vie: 0.5 + Math.random() * 0.35, r: (3.5 + Math.random() * 4) * u, c: k % 3 ? '#ffc62e' : '#ffffff', rot: Math.random() * 6 });
+          }
+        } else if (v.etat === 'erreur') this.textes.push({ x: x0, y: y0 - R * 1.7, txt: 'Pas celle-là', c: '#e2475c', t0: t });
+        else if (v.etat === 'oubli') this.textes.push({ x: x0, y: y0 - R * 1.7, txt: 'Trop tard', c: '#e2475c', t0: t });
+        else if (v.etat === 'ignore' && !this.vitrine) this.textes.push({ x: x0, y: y0 - R * 1.7, txt: 'Bien ignoré', c: '#178f5f', t0: t });
+      }
+      const age = t - v.t0, ae = t - v.tEtat;
+      let x = x0, y = y0 + Math.sin(t * 4.6 + s.dx * 9) * 2.2 * u, ech = 1, alpha = 1, fini = false;
+      if (age < 0.18) { const q = age / 0.18; ech = 0.3 + 0.7 * (1 + 1.7 * Math.pow(q - 1, 3) + 0.7 * Math.pow(q - 1, 2)); }
+      if (v.etat === 'la') {
+        // anneau : le temps qu'il reste pour repondre
+        const reste = borne(1 - (t - s.tDebut) / s.fenetre, 0, 1);
+        g.lineCap = 'round';
+        g.lineWidth = 4.2 * u;
+        g.strokeStyle = 'rgba(255,255,255,.3)';
+        g.beginPath(); g.arc(x, y, R * 1.52, 0, Math.PI * 2); g.stroke();
+        g.strokeStyle = 'rgba(255,255,255,.96)';
+        g.beginPath(); g.arc(x, y, R * 1.52, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * reste); g.stroke();
+      } else if (v.etat === 'attrape') {
+        const q = ae / 0.34; ech = 1 + 0.55 * q; alpha = 1 - q; fini = q >= 1;
+        g.strokeStyle = 'rgba(255,255,255,' + (0.9 * (1 - q)).toFixed(3) + ')'; g.lineWidth = 3 * u;
+        g.beginPath(); g.arc(x, y, R * (1.5 + 1.2 * q), 0, Math.PI * 2); g.stroke();
+      } else if (v.etat === 'erreur') {
+        const q = ae / 0.55; x += Math.sin(ae * 46) * 7 * u * (1 - q); alpha = q < 0.6 ? 1 : 1 - (q - 0.6) / 0.4; fini = q >= 1;
+      } else if (v.etat === 'oubli') {
+        const q = ae / 0.42; y += 26 * u * q * q; alpha = 1 - q; ech = 1 - 0.2 * q; fini = q >= 1;
+      } else if (v.etat === 'ignore') {
+        const q = ae / 0.36; y -= 20 * u * q; alpha = 1 - q; fini = q >= 1;
+      } else { const q = ae / 0.25; alpha = 1 - q; fini = q >= 1; }
+      if (fini) { this.vus.splice(i, 1); continue; }
+      dessinerGommette(g, s.genre, x, y, R * ech, 0, Math.max(0, alpha));
+      if (v.etat === 'erreur') {
+        // croix au stylo rouge
+        const q = borne(ae / 0.16, 0, 1), c = R * 0.95;
+        g.save(); g.globalAlpha = Math.max(0, alpha); g.strokeStyle = '#e2475c'; g.lineWidth = 5 * u; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(x - c, y - c); g.lineTo(x - c + 2 * c * q, y - c + 2 * c * q);
+        if (q >= 1) { const q2 = borne((ae - 0.16) / 0.14, 0, 1); g.moveTo(x + c, y - c); g.lineTo(x + c - 2 * c * q2, y - c + 2 * c * q2); }
+        g.stroke(); g.restore();
+      }
+    }
+  }
+
+  _effets(g, t, dt) {
+    const u = this.u;
+    for (let i = this.parts.length - 1; i >= 0; i--) {
+      const p = this.parts[i], q = (t - p.t0) / p.vie;
+      if (q >= 1) { this.parts.splice(i, 1); continue; }
+      p.vy += 520 * u * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      g.save(); g.translate(p.x, p.y); g.rotate(p.rot + q * 5); g.globalAlpha = 1 - q * q;
+      cheminForme(g, 'cible', p.r); g.fillStyle = p.c; g.fill();
+      g.restore();
+    }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '600 ' + Math.round(15 * u) + 'px ' + this.police;
+    for (let i = this.textes.length - 1; i >= 0; i--) {
+      const x = this.textes[i], q = (t - x.t0) / 0.9;
+      if (q >= 1) { this.textes.splice(i, 1); continue; }
+      g.globalAlpha = q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3;
+      const y = x.y - 22 * u * q;
+      g.lineWidth = 4 * u; g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineJoin = 'round';
+      g.strokeText(x.txt, x.x, y);
+      g.fillStyle = x.c; g.fillText(x.txt, x.x, y);
+    }
+    g.globalAlpha = 1;
+  }
+  // petit texte flottant (appele par le jeu)
+  dire(txt, x, y, c) { this.textes.push({ x, y, txt, c: c || '#1c2a78', t0: this.tPrec }); }
+}
+
+/* =====================================================================
+   FOCALIS : sons fabriques a la volee (Web Audio, aucun fichier)
+   Bruitages, souffle du vent et une petite ritournelle dont le tempo
+   suit le niveau de pilotage : quand le jeu accelere, la musique aussi.
+   ===================================================================== */
+const Son = (() => {
+  let ctx = null, sortie = null, actif = true, ventGain = null, ventFiltre = null;
+  let mProchain = 0, mPas = 0;
+  // do, sol, la mineur, fa : quatre mesures en boucle
+  const ACCORDS = [[261.63, 329.63, 392.0, 523.25], [196.0, 246.94, 293.66, 392.0], [220.0, 261.63, 329.63, 440.0], [174.61, 220.0, 261.63, 349.23]];
+  const MOTIF = [0, 2, 1, 2, 3, 2, 1, 2];
+  const GAMME = [659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51];   // la serie d'etoiles monte la gamme
+
+  // a appeler depuis un clic : les navigateurs n'ouvrent le son qu'apres un geste
+  function ouvrir() {
+    try {
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      sortie = ctx.createGain(); sortie.gain.value = actif ? 0.9 : 0; sortie.connect(ctx.destination);
+      // souffle du vent : bruit brun en boucle, filtre selon la vitesse
+      const n = Math.floor(ctx.sampleRate * 2), tampon = ctx.createBuffer(1, n, ctx.sampleRate), d = tampon.getChannelData(0);
+      let b = 0;
+      for (let i = 0; i < n; i++) { b = (b + 0.04 * (Math.random() * 2 - 1)) / 1.04; d[i] = b * 3.2; }
+      const vent = ctx.createBufferSource(); vent.buffer = tampon; vent.loop = true;
+      ventFiltre = ctx.createBiquadFilter(); ventFiltre.type = 'bandpass'; ventFiltre.frequency.value = 420; ventFiltre.Q.value = 0.5;
+      ventGain = ctx.createGain(); ventGain.gain.value = 0;
+      vent.connect(ventFiltre); ventFiltre.connect(ventGain); ventGain.connect(sortie); vent.start();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch (e) { ctx = null; }
+  }
+  // une note a l'instant t (horloge audio)
+  function noteA(f, t, duree, forme, volume, fFin) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = forme || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    if (fFin) o.frequency.exponentialRampToValueAtTime(fFin, t + duree);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(volume, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    o.connect(g); g.connect(sortie);
+    o.start(t); o.stop(t + duree + 0.04);
+  }
+  const note = (f, dans, duree, forme, volume, fFin) => noteA(f, ctx.currentTime + dans, duree, forme, volume, fFin);
+  const SONS = {
+    compte: () => note(523, 0, 0.13, 'triangle', 0.22),
+    depart: () => { note(784, 0, 0.12, 'triangle', 0.22); note(1047, 0.1, 0.3, 'triangle', 0.22); },
+    attrape: serie => { const f = GAMME[Math.min(Math.max((serie || 1) - 1, 0), GAMME.length - 1)]; note(f, 0, 0.1, 'triangle', 0.24); note(f * 1.5, 0.07, 0.17, 'triangle', 0.2); },
+    erreur: () => note(165, 0, 0.24, 'sawtooth', 0.15, 104),
+    oubli: () => note(392, 0, 0.22, 'sine', 0.13, 262),
+    ignore: () => note(1320, 0, 0.05, 'sine', 0.045),
+    vide: () => note(210, 0, 0.07, 'square', 0.055),
+    ecart: () => note(300, 0, 0.2, 'sine', 0.1, 170),
+    retour: () => note(880, 0, 0.09, 'sine', 0.07),
+    palier: () => { note(988, 0, 0.07, 'triangle', 0.09); note(1319, 0.06, 0.1, 'triangle', 0.09); },
+    etape: () => { note(440, 0, 0.12, 'triangle', 0.15); note(659, 0.1, 0.12, 'triangle', 0.15); note(880, 0.2, 0.22, 'triangle', 0.17); },
+    troncon: () => [784, 988, 1175, 1568].forEach((f, i) => note(f, i * 0.07, 0.17, 'triangle', 0.16)),
+    fin: () => [523, 659, 784, 1047, 1319].forEach((f, i) => note(f, i * 0.11, 0.3, 'triangle', 0.19)),
+  };
+  return {
+    ouvrir,
+    joue(nom, p) { if (!ctx || !actif || !SONS[nom]) return; try { SONS[nom](p); } catch (e) {} },
+    // v : vitesse de 0 a 1 ; hors : l'avion est sorti du courant
+    vent(v, hors) {
+      if (!ctx || !ventGain) return;
+      try {
+        ventGain.gain.setTargetAtTime(0.03 + 0.045 * v + (hors ? 0.07 : 0), ctx.currentTime, 0.15);
+        ventFiltre.frequency.setTargetAtTime(340 + 620 * v, ctx.currentTime, 0.2);
+      } catch (e) {}
+    },
+    // a appeler a chaque image pendant le vol : programme les croches du prochain quart de seconde
+    musique(bpm) {
+      if (!ctx || !actif) return;
+      try {
+        const t = ctx.currentTime;
+        if (mProchain < t - 0.3) mProchain = t + 0.06;   // depart, ou reprise apres une pause
+        while (mProchain < t + 0.22) {
+          const accord = ACCORDS[Math.floor(mPas / 8) % 4], pas = mPas % 8;
+          noteA(accord[MOTIF[pas]] * 2, mProchain, 0.22, 'triangle', 0.034);
+          if (pas === 0 || pas === 4) noteA(accord[0], mProchain, 0.4, 'sine', 0.06);
+          mProchain += 30 / bpm;
+          mPas = (mPas + 1) % 32;
+        }
+      } catch (e) {}
+    },
+    reprise() { mPas = 0; mProchain = 0; },
+    calme() { if (ctx && ventGain) { try { ventGain.gain.setTargetAtTime(0, ctx.currentTime, 0.12); } catch (e) {} } },
+    regler(oui) { actif = !!oui; if (sortie) sortie.gain.value = actif ? 0.9 : 0; },
+    get actif() { return actif; },
+  };
+})();
+
+/* =====================================================================
+   FOCALIS : courbes (SVG) avec lecture au survol ou au doigt
+   Traits de 2 px, grille discrete, une seule echelle par graphique.
+   ===================================================================== */
+const NS_SVG = 'http://www.w3.org/2000/svg';
+function svgEl(nom, attrs, parent) {
+  const e = document.createElementNS(NS_SVG, nom);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const nf = (v, d) => (v == null || !isFinite(v)) ? 'non mesuré' : v.toFixed(d || 0).replace('.', ',').replace('-', '−');
+
+/* cfg : { titre, xs, xMin, xMax, xGrad:[{v, txt}], yMin, yMax, yGrad:[..], dec, unite,
+           series:[{nom, coul, vals}], ruban:{haut, bas}, zones:[{de, a, nom}], hauteur, infoX:i=>txt } */
+function tracerCourbes(hote, cfg) {
+  hote.textContent = '';
+  hote.classList.add('graphe');
+  const n = cfg.xs.length;
+  const W = Math.max(250, Math.round(hote.clientWidth || 320)), H = cfg.hauteur || 168;
+  const m = { g: 38, d: 44, h: cfg.zones ? 26 : 12, b: 26 };
+  const X = v => m.g + (cfg.xMax === cfg.xMin ? 0.5 : (v - cfg.xMin) / (cfg.xMax - cfg.xMin)) * (W - m.g - m.d);
+  const Y = v => m.h + (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin)) * (H - m.h - m.b);
+  const fmt = v => nf(v, cfg.dec || 0);
+  const fmtGrad = v => nf(v, cfg.decGrad != null ? cfg.decGrad : (cfg.dec || 0));
+  const ENCRE = '#1c2a78', DOUCE = '#55609e', PAPIER = '#f8f9fd';
+
+  if (cfg.series.length > 1) {
+    const lg = document.createElement('ul'); lg.className = 'legende';
+    for (const s of cfg.series) {
+      const li = document.createElement('li'), cle = document.createElement('i');
+      cle.style.borderTopColor = s.coul;
+      li.appendChild(cle); li.appendChild(document.createTextNode(s.nom));
+      lg.appendChild(li);
+    }
+    hote.appendChild(lg);
+  }
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H, role: 'img' });
+  svg.setAttribute('aria-label', cfg.titre || 'Courbe');
+  hote.appendChild(svg);
+
+  // zones (les etapes du vol)
+  (cfg.zones || []).forEach((z, i) => {
+    svgEl('rect', { x: X(z.de), y: m.h, width: Math.max(0, X(z.a) - X(z.de)), height: H - m.h - m.b, fill: i % 2 ? 'rgba(42,75,208,.10)' : 'rgba(42,75,208,.05)' }, svg);
+    const t = svgEl('text', { x: (X(z.de) + X(z.a)) / 2, y: 16, 'text-anchor': 'middle', 'font-size': 11.5, fill: DOUCE }, svg);
+    t.textContent = z.nom;
+  });
+  // grille et graduations
+  for (const v of cfg.yGrad) {
+    svgEl('line', { x1: m.g, x2: W - m.d, y1: Y(v), y2: Y(v), stroke: 'rgba(126,108,214,.3)', 'stroke-width': 1 }, svg);
+    const t = svgEl('text', { x: m.g - 8, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 11.5, fill: DOUCE }, svg);
+    t.textContent = fmtGrad(v);
+  }
+  for (const gx of cfg.xGrad || []) {
+    const t = svgEl('text', { x: X(gx.v), y: H - 7, 'text-anchor': 'middle', 'font-size': 11.5, fill: DOUCE }, svg);
+    t.textContent = gx.txt;
+  }
+  // ruban (moyenne plus ou moins ecart)
+  if (cfg.ruban && n > 1) {
+    let d = '';
+    cfg.xs.forEach((x, i) => { d += (i ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(cfg.ruban.haut[i]).toFixed(1); });
+    for (let i = n - 1; i >= 0; i--) d += 'L' + X(cfg.xs[i]).toFixed(1) + ' ' + Y(cfg.ruban.bas[i]).toFixed(1);
+    svgEl('path', { d: d + 'Z', fill: cfg.series[0].coul, 'fill-opacity': 0.13 }, svg);
+  }
+  // courbes
+  const fins = [];
+  cfg.series.forEach((s, k) => {
+    let d = '', leve = true, dernier = -1, premier = -1;
+    s.vals.forEach((v, i) => {
+      if (v == null) { leve = true; return; }
+      d += (leve ? 'M' : 'L') + X(cfg.xs[i]).toFixed(1) + ' ' + Y(v).toFixed(1);
+      leve = false; dernier = i; if (premier < 0) premier = i;
+    });
+    if (dernier < 0) return;
+    if (cfg.series.length === 1 && !cfg.ruban && dernier > premier) {
+      svgEl('path', { d: d + 'L' + X(cfg.xs[dernier]).toFixed(1) + ' ' + Y(cfg.yMin).toFixed(1) + 'L' + X(cfg.xs[premier]).toFixed(1) + ' ' + Y(cfg.yMin).toFixed(1) + 'Z', fill: s.coul, 'fill-opacity': 0.1 }, svg);
+    }
+    svgEl('path', { d, fill: 'none', stroke: s.coul, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+    if (n <= 8) s.vals.forEach((v, i) => { if (v != null && i !== dernier) svgEl('circle', { cx: X(cfg.xs[i]), cy: Y(v), r: 4, fill: s.coul, stroke: PAPIER, 'stroke-width': 2 }, svg); });
+    svgEl('circle', { cx: X(cfg.xs[dernier]), cy: Y(s.vals[dernier]), r: 4.5, fill: s.coul, stroke: PAPIER, 'stroke-width': 2 }, svg);
+    fins.push({ x: X(cfg.xs[dernier]), y: Y(s.vals[dernier]), v: s.vals[dernier] });
+  });
+  // valeur en bout de courbe, sauf si deux etiquettes se chevauchent
+  const serre = fins.length > 1 && Math.abs(fins[0].y - fins[1].y) < 14;
+  if (!serre) for (const f of fins) {
+    const t = svgEl('text', { x: f.x + 9, y: f.y + 4, 'font-size': 12.5, 'font-weight': 600, fill: ENCRE }, svg);
+    t.textContent = fmt(f.v);
+  }
+
+  // lecture au survol : un repere vertical et une bulle qui donne toutes les series
+  if (!n) return;
+  const repere = svgEl('line', { y1: m.h, y2: H - m.b, stroke: ENCRE, 'stroke-width': 1, opacity: 0 }, svg);
+  const points = cfg.series.map(s => svgEl('circle', { r: 5, fill: s.coul, stroke: PAPIER, 'stroke-width': 2, opacity: 0 }, svg));
+  const bulle = document.createElement('div'); bulle.className = 'bulle';
+  hote.appendChild(bulle);
+  const zone = svgEl('rect', { x: 0, y: 0, width: W, height: H, fill: 'transparent' }, svg);
+  const montrer = ev => {
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return;
+    const px = (ev.clientX - r.left) * (W / r.width);
+    let i = 0, best = Infinity;
+    cfg.xs.forEach((x, k) => { const e = Math.abs(X(x) - px); if (e < best) { best = e; i = k; } });
+    const x = X(cfg.xs[i]);
+    repere.setAttribute('x1', x); repere.setAttribute('x2', x); repere.setAttribute('opacity', 0.35);
+    bulle.textContent = '';
+    if (cfg.infoX) { const e = document.createElement('div'); e.className = 'bulle-titre'; e.textContent = cfg.infoX(i); bulle.appendChild(e); }
+    cfg.series.forEach((s, k) => {
+      const v = s.vals[i];
+      if (v == null) { points[k].setAttribute('opacity', 0); return; }
+      points[k].setAttribute('cx', x); points[k].setAttribute('cy', Y(v)); points[k].setAttribute('opacity', 1);
+      const ligne = document.createElement('div'), cle = document.createElement('i'), val = document.createElement('b');
+      cle.style.borderTopColor = s.coul;
+      val.textContent = fmt(v) + (cfg.unite ? ' ' + cfg.unite : '');
+      ligne.appendChild(cle); ligne.appendChild(val);
+      ligne.appendChild(document.createTextNode(' ' + s.nom + (cfg.ruban && k === 0 ? ' (± ' + fmt((cfg.ruban.haut[i] - cfg.ruban.bas[i]) / 2) + ')' : '')));
+      bulle.appendChild(ligne);
+    });
+    bulle.style.opacity = 1;
+    const large = bulle.offsetWidth, ech = r.width / W, gauche = x * ech;
+    bulle.style.left = borne(gauche - large / 2, 0, Math.max(0, hote.clientWidth - large)) + 'px';
+    bulle.style.top = (svg.offsetTop - bulle.offsetHeight - 2) + 'px';
+  };
+  const cacher = () => { repere.setAttribute('opacity', 0); points.forEach(p => p.setAttribute('opacity', 0)); bulle.style.opacity = 0; };
+  let minuterie = 0;
+  const auDoigt = ev => { montrer(ev); clearTimeout(minuterie); if (ev.pointerType !== 'mouse') minuterie = setTimeout(cacher, 3500); };
+  zone.addEventListener('pointermove', auDoigt);
+  zone.addEventListener('pointerdown', auDoigt);
+  zone.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') cacher(); });
+}
+
+/* =====================================================================
+   FOCALIS : l'application (menu, consignes, vol, bilan, carnet)
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const ESP = ' ';
+const NOM_ONGLETS = ['jouer', 'carnet', 'science'];
+const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dateLongue = t => { const d = new Date(t); return JOURS[d.getDay()] + ' ' + d.getDate() + (d.getDate() === 1 ? 'er' : '') + ' ' + MOIS[d.getMonth()]; };
+const dateCourte = t => { const d = new Date(t); return d.getDate() + '/' + (d.getMonth() + 1); };
+const pct = v => (v == null ? 'non mesuré' : Math.round(v * 100) + ESP + '%');
+const enMs = v => (v == null ? 'non mesuré' : Math.round(v * 1000) + ESP + 'ms');
+const milliers = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ESP);
+const media = q => { try { return window.matchMedia(q).matches; } catch (e) { return false; } };
+const tactile = () => media('(pointer: coarse)');
+const sansAnimation = () => media('(prefers-reduced-motion: reduce)');
+const COUL_NAV = '#2a4bd0', COUL_TAP = '#e8662a';
+
+// gommette en SVG pour les pages (dans le ciel, elles sont dessinees sur le canvas)
+function svgGommette(genre, taille, vide, classe) {
+  const c = { cible: '#ffc62e', rond: '#ffc62e', coeur: '#ffc62e', bleu: '#3f7fe8', rouge: '#ee4d63' }[genre] || '#ffc62e';
+  let forme;
+  if (genre === 'rond') forme = '<circle r="15.5"/>';
+  else if (genre === 'coeur') forme = '<path d="M0 16C-23 1-14-17 0-6C14-17 23 1 0 16Z"/>';
+  else {
+    const p = [];
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? 9.5 : 19; p.push((Math.cos(a) * q).toFixed(1) + ',' + (Math.sin(a) * q + 1).toFixed(1)); }
+    forme = '<polygon points="' + p.join(' ') + '"/>';
+  }
+  const tete = '<svg class="gom' + (vide ? ' vide' : '') + (classe ? ' ' + classe : '') + '" width="' + taille + '" height="' + taille + '" viewBox="-26 -26 52 52" aria-hidden="true">';
+  if (vide) return tete + '<g fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" stroke-linejoin="round" opacity=".45">' + forme + '</g></svg>';
+  return tete + '<g stroke-linejoin="round"><g fill="#fff" stroke="#fff" stroke-width="8">' + forme + '</g><g fill="' + c + '" stroke="' + c + '" stroke-width="2">' + forme + '</g></g></svg>';
+}
+
+/* ---------- memoire : le carnet reste sur l'appareil ---------- */
+const Stock = (() => {
+  const CLE = 'focalis-v1';
+  let d = { vols: [], reglages: { son: true, main: 'droite' } };
+  return {
+    lire() {
+      try {
+        const brut = window.localStorage.getItem(CLE);
+        if (brut) {
+          const lu = JSON.parse(brut);
+          if (lu && Array.isArray(lu.vols)) d = { vols: lu.vols.filter(v => v && typeof v.focus === 'number').slice(-60), reglages: Object.assign({ son: true, main: 'droite' }, lu.reglages) };
+        }
+      } catch (e) {}
+      return d;
+    },
+    ecrire() { try { window.localStorage.setItem(CLE, JSON.stringify(d)); } catch (e) {} },
+    get d() { return d; },
+  };
+})();
+
+const etat = { onglet: 'jouer', ecran: 'menu', exemple: false };
+
+// niveaux de depart : un peu en dessous du dernier vol (le jeu s'adapte aussi entre les seances)
+function depart() {
+  const v = Stock.d.vols[Stock.d.vols.length - 1];
+  return v ? { nav: borne(v.nav - 1.5, 1, 8), tap: borne(v.tap - 1.5, 1, 8) } : { nav: REGLES.depart, tap: REGLES.depart };
+}
+function debutSemaine(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); }
+
+/* ---------- navigation ---------- */
+function ecran(nom) {
+  etat.ecran = nom;
+  $('#consignes').hidden = nom !== 'consignes';
+  $('#vol').hidden = nom !== 'vol';
+  $('#bilan').hidden = nom !== 'bilan';
+  const couvert = nom !== 'menu';
+  $('#cahier').inert = couvert; $('#menu').inert = couvert;
+  if (!couvert && etat.onglet === 'jouer') { majAccueil(); Vitrine.lancer(); } else Vitrine.arreter();
+}
+function montrerOnglet(nom, sansHash) {
+  if (!NOM_ONGLETS.includes(nom)) nom = 'jouer';
+  etat.onglet = nom;
+  for (const o of NOM_ONGLETS) {
+    $('#page-' + o).hidden = o !== nom;
+    const tab = $('#tab-' + o);
+    tab.setAttribute('aria-selected', String(o === nom));
+    tab.tabIndex = o === nom ? 0 : -1;
+  }
+  $('#cahier').scrollTop = 0;
+  if (nom === 'jouer' && etat.ecran === 'menu') { majAccueil(); Vitrine.lancer(); } else Vitrine.arreter();
+  if (nom === 'carnet') majCarnet();
+  if (!sansHash) { try { if (window.location.hash !== '#' + nom) window.location.hash = nom; } catch (e) {} }
+}
+
+/* ---------- accueil ---------- */
+function majAccueil() {
+  const vols = Stock.d.vols, d = depart(), r = Stock.d.reglages;
+  $('#date-jour').textContent = dateLongue(Date.now());
+  $('#acc-niveaux').textContent = (vols.length ? 'Tu repars du niveau ' : 'Tu démarres au niveau ') + nf(d.nav, 1) + ' en pilotage et ' + nf(d.tap, 1) + ' en cibles.';
+  const debut = debutSemaine(Date.now()), faits = vols.filter(v => v.t >= debut).length;
+  let h = '';
+  for (let i = 0; i < 5; i++) h += svgGommette('cible', 34, i >= faits);
+  $('#acc-semaine').innerHTML = h;
+  $('#acc-semaine-txt').textContent = faits >= 5 ? faits + ' séances, objectif atteint' : faits + (faits > 1 ? ' séances' : ' séance') + ' sur 5';
+  const focus = $('#acc-focus');
+  focus.hidden = !vols.length;
+  if (vols.length) focus.textContent = 'Dernier Indice Focus' + ESP + ': ' + vols[vols.length - 1].focus + '. Record' + ESP + ': ' + vols.reduce((m, v) => Math.max(m, v.focus || 0), 0) + '.';
+  $('#btn-son').setAttribute('aria-pressed', String(!!r.son));
+  $('#btn-son').textContent = r.son ? 'Son activé' : 'Son coupé';
+  $('#btn-main').textContent = 'Bouton Attraper à ' + (r.main === 'gauche' ? 'gauche' : 'droite');
+}
+
+/* ---------- la fenetre du menu : un vol qui se pilote tout seul ---------- */
+const Vitrine = (() => {
+  let vol = null, bot = null, rendu = null, cv = null, actif = false, tPrec = 0;
+  function nouveau() {
+    const rng = alea32(4242);
+    vol = new Vol({ mode: 'vitrine', ech: 0.62, nav: 3.4, tap: 3, rng });
+    bot = piloteAuto(vol, { rng, tr: 0.52, trEcart: 0.1, oubli: 0.08, impulsif: 0.1 });
+    for (let i = 0; i < 200; i++) { bot(1 / 60); vol.maj(1 / 60); vol.evts.length = 0; }   // on arrive en plein vol
+  }
+  function ajuster() {
+    if (!cv || !rendu) return;
+    const r = cv.getBoundingClientRect();
+    if (r.width > 2 && r.height > 2) rendu.taille(r.width, r.height);
+  }
+  function image(ts) {
+    if (!actif) return;
+    let dt = (ts - tPrec) / 1000; tPrec = ts;
+    if (!(dt > 0) || dt > 0.1) dt = 0.016;
+    bot(dt); vol.maj(dt); vol.evts.length = 0;
+    rendu.dessiner(vol);
+    requestAnimationFrame(image);
+  }
+  return {
+    ajuster,
+    lancer() {
+      if (!cv) { cv = $('#apercu'); rendu = new Rendu(cv, { vitrine: true }); nouveau(); }
+      ajuster();
+      rendu.dessiner(vol);
+      if (actif || sansAnimation()) return;
+      actif = true; tPrec = performance.now();
+      requestAnimationFrame(image);
+    },
+    arreter() { actif = false; },
+  };
+})();
+
+/* ---------- le vol ---------- */
+const Partie = (() => {
+  const el = {}, pointeurs = new Map(), touches = new Set();
+  const DUREES = {}, RANG = { compte: 0, pilote: 0, annonce2: 1, attrape: 1, annonce3: 2, double: 2, sortie: 3, fin: 3 };
+  REGLES.etapes.forEach(e => { DUREES[e.id] = e.d; });
+  const GAIN = 1.7;    // course du pouce : 100 px de pouce deplacent l'avion de 170 px
+  let vol = null, rendu = null, actif = false, enPause = false, tPrec = 0, tImage = 0;
+  let cache = {}, conseilTxt = '', conseilFin = 0, tAppui = 0, tVent = 0, tEcart = 0, sourisX = null, largeurRail = 0, largeurCiel = 390;
+
+  function preparer() {
+    el.racine = $('#vol'); el.ciel = $('#ciel'); el.points = $('#hud-points');
+    el.frise = Array.from(document.querySelectorAll('.frise li'));
+    el.annonce = $('#annonce'); el.conseil = $('#conseil');
+    el.commandes = $('#commandes'); el.manche = $('#manche'); el.gachette = $('#gachette');
+    el.rail = $('#rail'); el.curseur = $('#curseur'); el.mancheTxt = $('#manche-txt'); el.gachetteTxt = $('#gachette-txt');
+    el.troncons = $('#hud-troncons');
+    el.puces = { nav: lirePuce('#puce-nav'), tap: lirePuce('#puce-tap') };
+    $('#hud-icone').innerHTML = svgGommette('cible', 26);
+    $('#gachette-icone').innerHTML = svgGommette('cible', 46);
+
+    el.racine.addEventListener('pointerdown', ev => {
+      if (ev.target.closest && ev.target.closest('button')) return;
+      ev.preventDefault();
+      if (!actif || enPause || !vol) return;
+      const r = el.racine.getBoundingClientRect();
+      if (ev.pointerType === 'mouse') { attraper(ev); return; }
+      if (surGachette(ev.clientX, ev.clientY) || surGommette(ev.clientX - r.left, ev.clientY - r.top)) { attraper(ev); return; }
+      pointeurs.set(ev.pointerId, { x0: ev.clientX, x: ev.clientX, pose: ev.clientX, quand: performance.now(), base: vol.auto ? vol.x : vol.xVise, larg: r.width });
+      try { el.racine.setPointerCapture(ev.pointerId); } catch (e) {}
+    });
+    el.racine.addEventListener('pointermove', ev => {
+      if (!actif || !vol) return;
+      if (ev.pointerType === 'mouse') {
+        const r = el.racine.getBoundingClientRect();
+        sourisX = borne((ev.clientX - r.left) / r.width, 0.04, 0.96);
+        if (!vol.auto && !enPause) vol.xVise = sourisX;
+        return;
+      }
+      const p = pointeurs.get(ev.pointerId);
+      if (!p) return;
+      p.x = ev.clientX;
+      if (vol.auto || enPause) return;
+      const vise = p.base + (ev.clientX - p.x0) / p.larg * GAIN;
+      vol.xVise = borne(vise, 0.04, 0.96);
+      if (vise !== vol.xVise) { p.x0 = ev.clientX; p.base = vol.xVise; }   // en butee : le pouce repart d'ici, sans zone morte
+    });
+    const lacher = ev => {
+      const p = pointeurs.get(ev.pointerId);
+      pointeurs.delete(ev.pointerId);
+      // un appui bref hors du bouton : le joueur a sans doute voulu attraper
+      if (p && actif && vol && ev.type === 'pointerup' && performance.now() - p.quand < 260 && Math.abs(ev.clientX - p.pose) < 12 && (vol.etape === 'attrape' || vol.etape === 'double')) conseil('Pour attraper, appuie sur le bouton jaune', 2.2);
+    };
+    el.racine.addEventListener('pointerup', lacher);
+    el.racine.addEventListener('pointercancel', lacher);
+    el.racine.addEventListener('contextmenu', ev => ev.preventDefault());
+    el.annonce.addEventListener('click', ev => { if (ev.target.id === 'btn-reprendre') pause(false); });
+    $('#btn-quitter').addEventListener('click', abandonner);
+    window.addEventListener('keydown', ev => {
+      if (!actif) return;
+      if (ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); if (!ev.repeat) attraper(ev); }
+      else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); touches.add(ev.key); }
+      else if (ev.key === 'Escape') pause(!enPause);
+    });
+    window.addEventListener('keyup', ev => touches.delete(ev.key));
+    document.addEventListener('visibilitychange', () => { if (actif && document.hidden && !enPause) pause(true); });
+  }
+  function lirePuce(sel) { const p = $(sel); return { el: p, b: p.querySelector('b'), em: p.querySelector('em'), fin: 0 }; }
+  function surGachette(cx, cy) {
+    const r = el.gachette.getBoundingClientRect();
+    return cx >= r.left - 8 && cx <= r.right + 8 && cy >= r.top - 14 && cy <= r.bottom + 40;
+  }
+  function surGommette(px, py) {
+    const s = vol.stim;
+    if (!s || s.fait) return false;
+    const p = rendu.posGommette(s);
+    return Math.hypot(px - p.x, py - p.y) <= p.r * 2.1;
+  }
+  function vibrer(motif) { try { if (navigator.vibrate) navigator.vibrate(motif); } catch (e) {} }
+
+  function attraper(ev) {
+    el.gachette.classList.add('appui');
+    clearTimeout(tAppui); tAppui = setTimeout(() => el.gachette.classList.remove('appui'), 110);
+    if (!vol || vol.fini || enPause) return;
+    const maintenant = performance.now();
+    const horloge = ev && ev.timeStamp > 0 && Math.abs(ev.timeStamp - maintenant) < 2000 ? ev.timeStamp : maintenant;
+    vol.toucher(vol.t + borne((horloge - tImage) / 1000, 0, 0.05));
+    evenements();   // son et retour immediats, sans attendre l'image suivante
+  }
+  function clavier(dt) {
+    if (!touches.size || vol.auto) return;
+    const sens = (touches.has('ArrowRight') ? 1 : 0) - (touches.has('ArrowLeft') ? 1 : 0);
+    if (sens) vol.xVise = borne(vol.xVise + sens * 0.95 * dt, 0.04, 0.96);
+  }
+
+  /* --- messages --- */
+  function annoncer(html, visible) {
+    if (visible) el.annonce.innerHTML = html;
+    el.annonce.classList.toggle('visible', !!visible);
+  }
+  function conseil(txt, secondes) { conseilTxt = txt; conseilFin = performance.now() + secondes * 1000; }
+  const htmlCompte = n => '<p class="chiffre">' + n + '</p><p class="gros">Étape 1' + ESP + ': reste dans le courant d’air</p>';
+  function htmlAnnonce2() {
+    const leurres = ['bleu', 'rouge'];
+    if (vol.tap >= 3.5) leurres.push('rond');
+    if (vol.tap >= 5.5) leurres.push('coeur');
+    return '<p class="gros">Étape 2' + ESP + ': attrape les étoiles jaunes</p><div class="exemples"><span class="oui">' + svgGommette('cible', 46) + 'oui</span>'
+      + leurres.map(g => '<span class="non">' + svgGommette(g, 36) + 'non</span>').join('')
+      + '</div><p class="detail">L’avion vole tout seul pendant cette étape.</p>';
+  }
+  const HTML_ANNONCE3 = '<p class="gros">Étape 3' + ESP + ': les deux en même temps</p>';
+  function annonceDuMoment() {
+    const e = vol.etape;
+    if (e === 'compte') annoncer(htmlCompte(vol.compte), true);
+    else if (e === 'annonce2') annoncer(htmlAnnonce2(), true);
+    else if (e === 'annonce3') annoncer(HTML_ANNONCE3, true);
+    else annoncer('', false);
+  }
+  function verrous() {
+    const e = vol.etape;
+    const pilote = !vol.auto && (e === 'compte' || e === 'pilote' || e === 'annonce3' || e === 'double');
+    const tap = e === 'attrape' || e === 'double';
+    el.manche.classList.toggle('verrou', !pilote);
+    el.gachette.classList.toggle('verrou', !tap);
+    el.mancheTxt.textContent = pilote ? (tactile() ? 'Glisse pour piloter' : 'Souris pour piloter') : 'Pilote automatique';
+    el.gachetteTxt.textContent = tactile() ? 'Attraper' : 'Clic ou Espace';
+  }
+
+  /* --- ce qui vient de se passer dans le vol --- */
+  function evenements() {
+    for (const e of vol.evts) {
+      switch (e.type) {
+        case 'compte': annoncer(htmlCompte(e.n), true); Son.joue('compte'); break;
+        case 'etape': etape(e.id); break;
+        case 'attrape':
+          Son.joue('attrape', e.serie); vibrer(12);
+          if (e.serie >= 3 && e.serie % 3 === 0) conseil('Série de ' + e.serie + ESP + '!', 1.2);
+          break;
+        case 'erreur': Son.joue('erreur'); vibrer([30, 40, 30]); conseil('Seulement les étoiles jaunes', 1.6); break;
+        case 'oubli': Son.joue('oubli'); break;
+        case 'ignore': Son.joue('ignore'); break;
+        case 'tapVide': Son.joue('vide'); conseil('Attends la gommette', 1.2); break;
+        case 'tapMuet': if (vol.etape === 'pilote') conseil('Les gommettes arrivent à l’étape 2', 1.4); break;
+        case 'ecart': if (vol.t - tEcart > 0.5) { tEcart = vol.t; Son.joue('ecart'); } break;
+        case 'main': reprendreLaMain(); break;
+        case 'retour': Son.joue('retour'); break;
+        case 'niveau': niveau(e); break;
+        case 'troncon': troncon(e); break;
+      }
+    }
+    vol.evts.length = 0;
+  }
+  function etape(id) {
+    if (id === 'pilote') { annoncer('', false); Son.joue('depart'); conseil(tactile() ? 'Glisse ton pouce pour rester dans le courant' : 'Bouge la souris pour rester dans le courant', 4.5); }
+    else if (id === 'annonce2') { Son.joue('etape'); annoncer(htmlAnnonce2(), true); }
+    else if (id === 'attrape') { annoncer('', false); conseil(tactile() ? 'Étoile jaune' + ESP + ': appuie sur Attraper' : 'Étoile jaune' + ESP + ': clique ou appuie sur Espace', 4); }
+    else if (id === 'annonce3') { Son.joue('etape'); annoncer(HTML_ANNONCE3, true); }
+    else if (id === 'double') { annoncer('', false); conseil('Une étoile par tronçon réussi', 3.2); }
+    else if (id === 'sortie') { annoncer('<p class="gros">Atterrissage réussi</p>', true); Son.calme(); }
+    verrous();
+  }
+  // le pilote automatique rend le manche au joueur
+  function reprendreLaMain() {
+    for (const p of pointeurs.values()) { p.x0 = p.x; p.base = vol.x; }
+    if (sourisX != null && !tactile()) vol.xVise = sourisX;
+    conseil('À toi de piloter', 1.4);
+    verrous();
+  }
+  function niveau(e) {
+    const p = el.puces[e.quoi], monte = e.a > e.de;
+    p.b.textContent = nf(e.a, 1);
+    p.em.textContent = monte ? '▲' : '▼';
+    p.el.classList.toggle('monte', monte); p.el.classList.toggle('descend', !monte);
+    p.fin = performance.now() + 650;
+    if (monte && Math.floor(e.a) > Math.floor(e.de)) Son.joue('palier');
+  }
+  function troncon(e) {
+    const places = el.troncons.children;
+    if (places[e.i]) places[e.i].outerHTML = e.ok ? svgGommette('cible', 24, false, 'pose') : svgGommette('cible', 24, true);
+    if (e.ok) { Son.joue('troncon'); vibrer(25); }
+    if (e.i < 2) conseil(e.ok ? 'Tronçon réussi' + ESP + ': une étoile' : 'Pas d’étoile sur ce tronçon', 1.8);
+  }
+
+  function remettreHud() {
+    cache = {}; conseilTxt = ''; conseilFin = 0;
+    el.points.textContent = '0';
+    el.troncons.innerHTML = svgGommette('cible', 24, true) + svgGommette('cible', 24, true) + svgGommette('cible', 24, true);
+    for (const k of ['nav', 'tap']) {
+      const p = el.puces[k];
+      p.b.textContent = nf(vol[k], 1); p.em.textContent = ''; p.fin = 0;
+      p.el.classList.remove('monte', 'descend');
+    }
+    el.conseil.classList.remove('visible');
+    el.commandes.classList.toggle('gaucher', Stock.d.reglages.main === 'gauche');
+    largeurRail = el.rail.offsetWidth; largeurCiel = el.racine.clientWidth || 390; tEcart = 0;
+    verrous();
+  }
+  function majHud(ts) {
+    const pts = Math.round(vol.points);
+    if (pts !== cache.pts) { cache.pts = pts; el.points.textContent = milliers(pts); }
+    const e = vol.etape, rang = RANG[e] == null ? 0 : RANG[e];
+    const part = (e === 'pilote' || e === 'attrape' || e === 'double') ? borne(vol.tEtape / DUREES[e], 0, 1) : 0;
+    const cle = rang + ':' + Math.round(part * 100);
+    if (cle !== cache.frise) {
+      cache.frise = cle;
+      el.frise.forEach((li, i) => {
+        li.classList.toggle('fait', i < rang); li.classList.toggle('encours', i === rang);
+        li.firstElementChild.style.width = (i === rang ? part * 100 : 0) + '%';
+      });
+    }
+    const x = Math.round((vol.auto ? vol.x : vol.xVise) * 500);
+    if (x !== cache.x) { cache.x = x; el.curseur.style.transform = 'translateX(' + borne((x / 500 - 0.5) * largeurCiel / GAIN, -largeurRail / 2, largeurRail / 2).toFixed(1) + 'px)'; }
+    for (const k of ['nav', 'tap']) {
+      const p = el.puces[k];
+      if (p.fin && ts > p.fin) { p.fin = 0; p.em.textContent = ''; p.el.classList.remove('monte', 'descend'); }
+    }
+    const hors = (e === 'pilote' || e === 'double') && !vol.dedans;
+    const txt = hors && vol.tHors > 0.45 ? 'Reviens dans le courant' + ESP + '!' : (ts < conseilFin ? conseilTxt : '');
+    if (txt !== cache.conseil) {
+      cache.conseil = txt;
+      if (txt) el.conseil.textContent = txt;
+      el.conseil.classList.toggle('visible', !!txt);
+    }
+    if (ts - tVent > 140) { tVent = ts; Son.vent(borne(vol.vit / (700 * vol.ech), 0, 1), hors); }
+  }
+
+  /* --- boucle --- */
+  function image(ts) {
+    if (!actif) return;
+    let dt = (ts - tPrec) / 1000; tPrec = ts;
+    if (!(dt > 0)) dt = 0;
+    if (dt > 0.1) dt = 0.016;   // retour d'onglet : on ne saute pas dans le temps
+    if (!enPause) {
+      clavier(dt);
+      vol.maj(dt); tImage = ts;
+      evenements();
+      if (vol.etape !== 'compte' && vol.etape !== 'sortie' && !vol.fini) Son.musique(92 + 7 * (vol.nav - 1));   // le tempo suit le niveau de pilotage
+    }
+    rendu.dessiner(vol);
+    majHud(ts);
+    if (vol.fini) { finir(); return; }
+    requestAnimationFrame(image);
+  }
+  function ajuster() {
+    if (!rendu || etat.ecran !== 'vol') return;
+    const r = el.racine.getBoundingClientRect();
+    if (r.width > 2 && r.height > 2) rendu.taille(r.width, r.height);
+    largeurRail = el.rail.offsetWidth; largeurCiel = el.racine.clientWidth || 390; cache.x = null;
+  }
+  function lancer() {
+    Son.ouvrir();
+    ecran('vol');
+    const r = el.racine.getBoundingClientRect();
+    if (!rendu) rendu = new Rendu(el.ciel);
+    rendu.vider(); rendu.taille(r.width, r.height);
+    const d = depart();
+    vol = new Vol({ ech: borne(r.height / 700, 0.6, 1.6), nav: d.nav, tap: d.tap });
+    pointeurs.clear(); touches.clear(); sourisX = null; enPause = false; actif = true;
+    remettreHud();
+    Son.reprise();
+    annoncer(htmlCompte(3), true); Son.joue('compte');
+    tPrec = performance.now(); tImage = tPrec;
+    requestAnimationFrame(image);
+  }
+  function pause(oui) {
+    if (!actif) return;
+    enPause = oui;
+    if (oui) { Son.calme(); annoncer('<p class="gros">Pause</p><button class="bouton" id="btn-reprendre" type="button">Reprendre le vol</button>', true); }
+    else { annonceDuMoment(); tPrec = performance.now(); }
+  }
+  function abandonner() { actif = false; Son.calme(); ecran('menu'); }
+  function finir() {
+    actif = false; Son.calme(); Son.joue('fin');
+    const b = vol.bilan(), vols = Stock.d.vols, a2 = v => Math.round(v * 100) / 100;
+    const avant = vols.length ? vols[vols.length - 1] : null;
+    const record = vols.reduce((m, v) => Math.max(m, v.focus || 0), 0);
+    vols.push({ t: Date.now(), nav: a2(b.navFin), tap: a2(b.tapFin), nav0: a2(b.navDepart), tap0: a2(b.tapDepart), tr: b.trMoyen, ect: b.trEcart, d: b.dPrime, oublis: b.oublis, enTrop: b.tapsEnTrop, focus: b.focus, etoiles: b.etoiles, suivi: b.suiviDuo, points: b.points });
+    if (vols.length > 60) vols.splice(0, vols.length - 60);
+    Stock.ecrire();
+    montrerBilan(b, avant, record);
+  }
+  return { preparer, lancer, ajuster, get vol() { return vol; } };
+})();
+
+/* ---------- bilan du vol ---------- */
+function ligne(dl, nom, valeur, note) {
+  const div = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
+  dt.textContent = nom; dd.textContent = valeur;
+  if (note) { const s = document.createElement('small'); s.textContent = note; dd.appendChild(s); }
+  div.appendChild(dt); div.appendChild(dd); dl.appendChild(div);
+}
+function montrerBilan(b, avant, record) {
+  ecran('bilan');
+  $('#bilan').scrollTop = 0;
+  $('#bilan-mot').textContent = ['Bel effort, on y retourne' + ESP + '?', 'Bien, continue comme ça.', 'Très bien' + ESP + '!', 'Excellent vol' + ESP + '!'][b.etoiles] || '';
+  $('#bilan-focus').textContent = b.focus;
+  let h = '';
+  for (let i = 0; i < 3; i++) h += svgGommette('cible', 40, i >= b.etoiles, i < b.etoiles ? 'pose' : '');
+  $('#bilan-etoiles').innerHTML = h;
+  $('#bilan-etoiles-txt').textContent = b.etoiles + (b.etoiles > 1 ? ' tronçons réussis' : ' tronçon réussi') + ' sur 3';
+  $('#bilan-points').textContent = milliers(b.points) + ' points';
+  let delta;
+  if (!avant) delta = 'C’est ton premier vol' + ESP + ': cet indice devient ton point de départ.';
+  else {
+    const ecart = b.focus - avant.focus;
+    delta = (ecart > 0 ? 'Indice Focus en hausse de ' + ecart + (ecart > 1 ? ' points' : ' point') : ecart < 0 ? 'Indice Focus en baisse de ' + (-ecart) + (ecart < -1 ? ' points' : ' point') : 'Indice Focus identique') + ' par rapport à ton dernier vol.';
+    if (b.focus > record) delta += ' C’est ton record.';
+  }
+  $('#bilan-delta').textContent = delta;
+
+  const nav = $('#bilan-nav'); nav.textContent = '';
+  ligne(nav, 'Niveau atteint', nf(b.navFin, 1) + ' sur 10', 'moyenne de fin de vol, départ à ' + nf(b.navDepart, 1));
+  ligne(nav, 'Temps dans le courant', pct(b.suiviDuo), 'en double tâche');
+  ligne(nav, 'Distance dans le courant', milliers(b.metres) + ESP + 'm');
+  const tap = $('#bilan-tap'); tap.textContent = '';
+  ligne(tap, 'Niveau atteint', nf(b.tapFin, 1) + ' sur 10', nf(fenetrePour(b.tapFin), 2) + ' s pour répondre, départ à ' + nf(b.tapDepart, 1));
+  ligne(tap, 'Étoiles attrapées', b.tout.attrape + ' sur ' + b.tout.nCibles);
+  ligne(tap, 'Leurres touchés', b.tout.erreur + ' sur ' + b.tout.nLeurres);
+  ligne(tap, 'Appuis sans gommette', String(b.vides));
+  ligne(tap, 'Temps de réaction', enMs(b.trMoyen), b.trEcart == null ? '' : 'régularité ± ' + enMs(b.trEcart));
+  ligne(tap, 'Sélectivité d′', nf(b.dPrime, 1));
+  if (b.coutTR != null) ligne(tap, 'Coût de la double tâche', (b.coutTR >= 0 ? '+' : '−') + Math.abs(Math.round(b.coutTR * 1000)) + ESP + 'ms', 'temps de réaction, indicatif');
+
+  $('#bilan-titre-courbe').textContent = 'Le jeu s’est ajusté ' + b.ajustements + ' fois';
+  const hi = b.histo, hote = $('#g-vol');
+  if (hi.length > 2) {
+    const bornes = id => { let t = 0; for (const e of REGLES.etapes) { if (e.id === id) return [t, t + e.d]; t += e.d; } return [0, 0]; };
+    const zp = bornes('pilote'), za = bornes('attrape'), zd = bornes('double');
+    tracerCourbes(hote, {
+      titre: 'Niveaux de difficulté pendant le vol, pilotage et cibles',
+      xs: hi.map(p => p.t), xMin: zp[0], xMax: zd[1],
+      xGrad: [0, 20, 40, 60].map(s => ({ v: zp[0] + s, txt: s + ' s' })),
+      yMin: 1, yMax: 10, yGrad: [1, 4, 7, 10], dec: 1, decGrad: 0,
+      series: [{ nom: 'Pilotage', coul: COUL_NAV, vals: hi.map(p => p.nav) }, { nom: 'Cibles', coul: COUL_TAP, vals: hi.map(p => p.tap) }],
+      zones: [{ de: zp[0], a: zp[1], nom: 'Piloter' }, { de: za[0], a: za[1], nom: 'Attraper' }, { de: zd[0], a: zd[1], nom: 'Les deux' }],
+      hauteur: 196, infoX: i => 'à ' + Math.round(hi[i].t - zp[0]) + ' s',
+    });
+  } else hote.textContent = '';
+}
+
+/* ---------- carnet de vol ---------- */
+function gradSeances(n) {
+  const g = [{ v: 1, txt: 'séance 1' }];
+  if (n <= 6) { for (let i = 2; i <= n; i++) g.push({ v: i, txt: String(i) }); return g; }
+  for (let i = 5; i <= n; i += 5) g.push({ v: i, txt: String(i) });
+  if (n % 5 >= 2) g.push({ v: n, txt: String(n) });
+  return g;
+}
+function majCarnet() {
+  const ex = etat.exemple, vols = ex ? carnetExemple(Date.now()) : Stock.d.vols, n = vols.length;
+  $('#btn-mien').setAttribute('aria-pressed', String(!ex));
+  $('#btn-exemple').setAttribute('aria-pressed', String(ex));
+  $('#carnet-note').hidden = !ex;
+  $('#carnet-vide').hidden = n > 0;
+  $('#carnet-plein').hidden = n === 0;
+  $('#btn-effacer').hidden = ex;
+  $('#confirme-effacer').hidden = true;
+  if (!n) return;
+  const dernier = vols[n - 1], premier = vols[0];
+  const resume = $('#carnet-resume'); resume.textContent = '';
+  ligne(resume, 'Séances', String(n), n > 1 ? 'du ' + dateCourte(premier.t) + ' au ' + dateCourte(dernier.t) : 'le ' + dateCourte(dernier.t));
+  ligne(resume, 'Indice Focus', String(dernier.focus), n > 1 ? 'meilleur ' + vols.reduce((m, v) => Math.max(m, v.focus), 0) + ', premier vol ' + premier.focus : '');
+  ligne(resume, 'Niveau de pilotage', nf(dernier.nav, 1), n > 1 ? 'premier vol ' + nf(premier.nav, 1) : '');
+  ligne(resume, 'Niveau des cibles', nf(dernier.tap, 1), n > 1 ? 'premier vol ' + nf(premier.tap, 1) : '');
+
+  const xs = vols.map((v, i) => i + 1), xGrad = gradSeances(n), info = i => 'Séance ' + (i + 1) + ', le ' + dateCourte(vols[i].t);
+  tracerCourbes($('#g-focus'), {
+    titre: 'Indice Focus par séance', xs, xMin: 1, xMax: Math.max(n, 2), xGrad,
+    yMin: 0, yMax: 100, yGrad: [0, 25, 50, 75, 100], dec: 0,
+    series: [{ nom: 'Indice Focus', coul: COUL_NAV, vals: vols.map(v => v.focus) }], infoX: info,
+  });
+  tracerCourbes($('#g-niveaux'), {
+    titre: 'Niveaux atteints par séance, pilotage et cibles', xs, xMin: 1, xMax: Math.max(n, 2), xGrad,
+    yMin: 1, yMax: 10, yGrad: [1, 4, 7, 10], dec: 1, decGrad: 0,
+    series: [{ nom: 'Pilotage', coul: COUL_NAV, vals: vols.map(v => v.nav) }, { nom: 'Cibles', coul: COUL_TAP, vals: vols.map(v => v.tap) }], infoX: info,
+  });
+  const trs = vols.map(v => (v.tr == null ? null : v.tr * 1000)), connus = trs.filter(v => v != null);
+  const hoteTr = $('#g-tr');
+  if (connus.length) {
+    const ects = vols.map(v => (v.ect == null ? 0 : v.ect * 1000));
+    const complet = connus.length === n;
+    let bas = Math.min.apply(null, trs.map((v, i) => (v == null ? Infinity : v - ects[i]))), haut = Math.max.apply(null, trs.map((v, i) => (v == null ? -Infinity : v + ects[i])));
+    bas = Math.max(0, Math.floor(bas / 100) * 100); haut = Math.ceil(haut / 100) * 100;
+    if (haut - bas < 200) haut = bas + 200;
+    const pas = haut - bas > 600 ? 200 : 100;
+    haut = bas + Math.ceil((haut - bas) / pas) * pas;
+    const yGrad = [];
+    for (let v = bas; v <= haut; v += pas) yGrad.push(v);
+    tracerCourbes(hoteTr, {
+      titre: 'Temps de réaction par séance, en millisecondes', xs, xMin: 1, xMax: Math.max(n, 2), xGrad,
+      yMin: bas, yMax: haut, yGrad, dec: 0, unite: 'ms',
+      series: [{ nom: 'temps de réaction', coul: COUL_NAV, vals: trs }],
+      ruban: complet ? { haut: trs.map((v, i) => v + ects[i]), bas: trs.map((v, i) => v - ects[i]) } : null, infoX: info,
+    });
+  } else { hoteTr.classList.remove('graphe'); hoteTr.textContent = 'Aucune étoile attrapée pour l’instant.'; }
+
+  const liste = $('#carnet-liste'); liste.textContent = '';
+  vols.slice().reverse().forEach((v, k) => {
+    const li = document.createElement('li'), quand = document.createElement('span'), quoi = document.createElement('div');
+    const fort = document.createElement('strong'), fin = document.createElement('small'), et = document.createElement('span');
+    quand.className = 'quand'; quand.textContent = dateCourte(v.t);
+    quoi.className = 'quoi';
+    fort.textContent = 'Vol n° ' + (n - k) + ', Indice Focus ' + v.focus;
+    fin.textContent = 'pilotage ' + nf(v.nav, 1) + ', cibles ' + nf(v.tap, 1) + (v.tr == null ? '' : ', ' + enMs(v.tr));
+    quoi.appendChild(fort); quoi.appendChild(fin);
+    et.className = 'gommettes'; et.setAttribute('aria-label', (v.etoiles || 0) + ' étoiles sur 3');
+    et.innerHTML = [0, 1, 2].map(i => svgGommette('cible', 20, i >= (v.etoiles || 0))).join('');
+    li.appendChild(quand); li.appendChild(quoi); li.appendChild(et);
+    liste.appendChild(li);
+  });
+}
+
+/* ---------- schema de l'escalier adaptatif (onglet La science) ---------- */
+function dessinerSchema() {
+  const hote = $('#schema-escalier'), W = 320, H = 150;
+  const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img' });
+  svg.setAttribute('aria-label', 'La difficulté monte par petites marches après chaque réussite et descend d’une grande marche après chaque erreur. Elle se stabilise autour de ton niveau.');
+  const suite = 'RRRRRRRRERRRRRERRRRERRRRRERRRE';
+  let x = 34, y = 120, d = 'M' + x + ' ' + y;
+  const croix = [];
+  for (const c of suite) {
+    x += 8.6;
+    d += 'H' + x.toFixed(1);
+    if (c === 'R') y -= 7; else { y += 28; croix.push([x, y - 28]); }
+    d += 'V' + y;
+  }
+  d += 'H' + (x + 8).toFixed(1);
+  svgEl('line', { x1: 34, x2: W - 8, y1: 64, y2: 64, stroke: '#1c2a78', 'stroke-width': 1, 'stroke-dasharray': '2 5', opacity: 0.55 }, svg);
+  svgEl('path', { d, fill: 'none', stroke: COUL_NAV, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+  for (const c of croix) svgEl('circle', { cx: c[0], cy: c[1], r: 4, fill: '#e2475c', stroke: '#f8f9fd', 'stroke-width': 2 }, svg);
+  const texte = (t, tx, ty, o) => { const e = svgEl('text', Object.assign({ x: tx, y: ty, 'font-size': 11.5, fill: '#55609e' }, o || {}), svg); e.textContent = t; };
+  texte('ton niveau : 80 % de réussite', W - 8, 28, { 'text-anchor': 'end', fill: '#1c2a78', 'font-weight': 600 });
+  svgEl('line', { x1: W - 60, x2: W - 60, y1: 33, y2: 60, stroke: '#1c2a78', 'stroke-width': 1, opacity: 0.55 }, svg);
+  texte('difficulté', 12, 76, { transform: 'rotate(-90 12 76)', 'text-anchor': 'middle' });
+  texte('réussite : petite marche qui monte', 34, H - 6);
+  svgEl('circle', { cx: 232, cy: H - 10, r: 4, fill: '#e2475c' }, svg);
+  texte('erreur', 240, H - 6);
+  hote.appendChild(svg);
+}
+
+/* ---------- demarrage ---------- */
+function demarrer(chaud) {
+  Stock.lire();
+  Son.regler(Stock.d.reglages.son);
+  Partie.preparer();
+  dessinerSchema();
+  $('#picto-cible').innerHTML = svgGommette('cible', 46);
+  $('#picto-leurres').innerHTML = svgGommette('bleu', 26) + svgGommette('rouge', 26);
+  try { if (document.fonts && document.fonts.load) document.fonts.load('600 15px Lexend'); } catch (e) {}
+
+  const ouvrirConsignes = () => {
+    Son.ouvrir();
+    if (!tactile()) {
+      $('#consigne-pilote').textContent = 'Déplace la souris de gauche à droite pour garder l’avion dans le courant d’air.';
+      $('#consigne-attrape').textContent = 'Clique ou appuie sur Espace dès qu’une étoile jaune apparaît.';
+    }
+    ecran('consignes'); $('#consignes').scrollTop = 0;
+  };
+  document.querySelectorAll('.onglet').forEach(b => b.addEventListener('click', () => montrerOnglet(b.dataset.onglet)));
+  ['#btn-decoller', '#btn-decoller-2', '#btn-fenetre'].forEach(s => $(s).addEventListener('click', ouvrirConsignes));
+  $('#btn-partir').addEventListener('click', () => Partie.lancer());
+  $('#btn-retour').addEventListener('click', () => ecran('menu'));
+  $('#btn-rejouer').addEventListener('click', () => Partie.lancer());
+  $('#btn-vers-carnet').addEventListener('click', () => { etat.exemple = false; ecran('menu'); montrerOnglet('carnet'); });
+  $('#btn-menu').addEventListener('click', () => { ecran('menu'); montrerOnglet('jouer'); });
+  $('#btn-son').addEventListener('click', () => { const r = Stock.d.reglages; r.son = !r.son; Son.regler(r.son); if (r.son) { Son.ouvrir(); Son.joue('palier'); } Stock.ecrire(); majAccueil(); });
+  $('#btn-main').addEventListener('click', () => { const r = Stock.d.reglages; r.main = r.main === 'gauche' ? 'droite' : 'gauche'; Stock.ecrire(); majAccueil(); });
+  $('#btn-mien').addEventListener('click', () => { etat.exemple = false; majCarnet(); });
+  $('#btn-exemple').addEventListener('click', () => { etat.exemple = true; majCarnet(); });
+  $('#btn-effacer').addEventListener('click', () => { $('#confirme-effacer').hidden = false; });
+  $('#btn-effacer-non').addEventListener('click', () => { $('#confirme-effacer').hidden = true; });
+  $('#btn-effacer-oui').addEventListener('click', () => { Stock.d.vols.length = 0; Stock.ecrire(); majCarnet(); });
+
+  let tTaille = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(tTaille);
+    tTaille = setTimeout(() => { Vitrine.ajuster(); Partie.ajuster(); if (etat.ecran === 'menu' && etat.onglet === 'carnet') majCarnet(); }, 140);
+  });
+  window.addEventListener('hashchange', () => {
+    const h = (window.location.hash || '').slice(1);
+    if (NOM_ONGLETS.includes(h) && h !== etat.onglet && etat.ecran === 'menu') montrerOnglet(h, true);
+  });
+  let h = '';
+  try { h = (window.location.hash || '').slice(1); } catch (e) {}
+  ecran('menu');
+  montrerOnglet(NOM_ONGLETS.includes(h) ? h : (chaud && chaud.onglet) || 'jouer', true);
+}
+
+try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ onglet: etat.onglet })); } catch (e) {}
+if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(demarrer);
+else demarrer((window.claude && window.claude.hot && window.claude.hot.data) || {});
+
+})();
+</script>
+</body>
+</html>
